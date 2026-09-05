@@ -1,0 +1,38 @@
+stages:
+  - deploy
+
+deploy_production:
+  stage: deploy
+
+  tags:
+    - bankemi-backend-production
+
+  script:
+    - cd /var/www/bankemi-backend
+
+    - echo "=== Deploying BankEMI Laravel Backend ==="
+
+    - git fetch origin production
+    - git checkout production
+    - git pull --ff-only origin production
+
+    - echo "=== Installing Composer dependencies ==="
+    - composer install --no-dev --optimize-autoloader
+
+    - echo "=== Running migrations ==="
+    - php artisan migrate --force
+
+    - echo "=== Clearing Laravel cache ==="
+    - php artisan optimize:clear
+
+    - echo "=== Optimizing Laravel ==="
+    - php artisan optimize
+
+    - echo "=== Reloading PHP-FPM ==="
+    - sudo systemctl reload php8.4-fpm
+
+    - echo "=== Deployment completed successfully ==="
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "production"'
+    

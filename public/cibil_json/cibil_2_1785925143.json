@@ -1,0 +1,618 @@
+{
+  "report_summary": {
+    "control_number": "11,33,22,72,686",
+    "report_date": "20/07/2026",
+    "cibil_score": "757"
+  },
+  "personal_information": {
+    "full_name": "KUSUM GULERIA",
+    "date_of_birth": "1976",
+    "gender": "Female"
+  },
+  "identification_details": [
+    {
+      "type": "Income Tax ID Number (PAN)",
+      "number": "AGUPT7287N",
+      "issue_date": null,
+      "expiry_date": null
+    },
+    {
+      "type": "CKYC",
+      "number": "50004117921063",
+      "issue_date": null,
+      "expiry_date": null
+    }
+  ],
+  "address_details": [
+    {
+      "address": "C/O RAKESH KUMAR GULERIA 17 FIRST FLOOR PART 1 DESU MAJRA KHARAR KHARAR SAS NAGA INDIA KHARAR PUNJAB 140307 Punjab 140307",
+      "category": "Residence Address",
+      "residence_code": null,
+      "date_reported": "2024"
+    },
+    {
+      "address": "H NO 17,DESU MAJRA MAA SHIMLA HOMES KARYANA SHOP ROPAR-PB Punjab 140301 (e)",
+      "category": "Residence Address",
+      "residence_code": "Owned",
+      "date_reported": "2017"
+    },
+    {
+      "address": "HOUSE NO 4659 SECTOR 68 DARSHAN VIHAR NEAR PARK MOHALI Punjab 140301",
+      "category": "Residence Address",
+      "residence_code": null,
+      "date_reported": "2017"
+    },
+    {
+      "address": "WORTH MEDICINES INDIA PVT LTD 1 PLOT NO 921 INDUSTRIAL AREA RAMDARBAR PHASE 2 NEAR SHIV MANDIR CHANDIGARH Chandigarh 160002",
+      "category": "Not Categorized",
+      "residence_code": null,
+      "date_reported": "2012"
+    }
+  ],
+  "contact_details": {
+    "telephones": [
+      {
+        "type": "Mobile Phone",
+        "number": "9569606066"
+      },
+      {
+        "type": "Not Classified",
+        "number": "9569606066"
+      },
+      {
+        "type": "Office Phone",
+        "number": "2267451"
+      }
+    ],
+    "emails": [
+      "RAKESHGUL25@YAHOO.CO.IN"
+    ]
+  },
+  "employment_details": {
+    "account_type": "Consumer Loan",
+    "occupation": "Others",
+    "income": null,
+    "income_indicator": null,
+    "income_type": null,
+    "date_reported": "2025"
+  },
+  "account_details": [
+    {
+      "member_name": "BAJAJ FIN LTD",
+      "account_type": "Consumer Loan",
+      "account_number": "424DPFMD062430",
+      "ownership_indicator": "Individual",
+      "account_status": null,
+      "credit_limit": null,
+      "sanctioned_amount": 89900,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "12",
+      "emi_amount": 7492,
+      "payment_frequency": "Monthly",
+      "date_opened": "2024",
+      "date_closed": "2025",
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2024",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "HOME CREDIT",
+      "account_type": "Consumer Loan",
+      "account_number": "3708965792",
+      "ownership_indicator": "Individual",
+      "account_status": null,
+      "credit_limit": null,
+      "sanctioned_amount": 13889,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "6",
+      "emi_amount": 2315,
+      "payment_frequency": "Monthly",
+      "date_opened": "2017",
+      "date_closed": "2018",
+      "date_reported": "2019",
+      "payment_history": [
+        {
+          "month_year": "May 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2017",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2017",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2017",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2017",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2017",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "BAJAJ FIN LTD",
+      "account_type": "Consumer Loan",
+      "account_number": "4240CD25555420",
+      "ownership_indicator": "Individual",
+      "account_status": null,
+      "credit_limit": null,
+      "sanctioned_amount": 30000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2016",
+      "date_closed": "2017",
+      "date_reported": "2021",
+      "payment_history": [
+        {
+          "month_year": "Mar 2021",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2019",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2018",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2018",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "BAJAJ FIN LTD",
+      "account_type": "Consumer Loan",
+      "account_number": "4240CD00093807",
+      "ownership_indicator": "Individual",
+      "account_status": null,
+      "credit_limit": null,
+      "sanctioned_amount": 69000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2012",
+      "date_closed": "2013",
+      "date_reported": "2021",
+      "payment_history": [
+        {
+          "month_year": "Mar 2021",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2020",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2019",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2018",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2018",
+          "status": "XXX"
+        }
+      ]
+    }
+  ],
+  "enquiry_details": [
+    {
+      "member_name": "IDFC FIRST BANK",
+      "date": "2024",
+      "purpose": "Consumer Loan"
+    },
+    {
+      "member_name": "PIRAMALFIN",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "HDFC BANK",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    }
+  ]
+}

@@ -1,0 +1,2434 @@
+{
+  "report_summary": {
+    "control_number": "11,33,47,34,938",
+    "report_date": "20/07/2026",
+    "cibil_score": "760"
+  },
+  "personal_information": {
+    "full_name": "SAURABH BANSAL S/O SATPAL BANSAL",
+    "date_of_birth": "1982",
+    "gender": "Male"
+  },
+  "identification_details": [
+    {
+      "type": "Income Tax ID Number (PAN)",
+      "number": "AFWPB9934P",
+      "issue_date": null,
+      "expiry_date": null
+    },
+    {
+      "type": "Voter ID Number",
+      "number": "PBA 4691770",
+      "issue_date": null,
+      "expiry_date": null
+    },
+    {
+      "type": "CKYC",
+      "number": "60001285221085",
+      "issue_date": null,
+      "expiry_date": null
+    }
+  ],
+  "address_details": [
+    {
+      "address": "H NO 200 1 SECTOR 45 A BURAIL SECTOR 47 CHANDIGARH Chandigarh 160047",
+      "category": "Residence Address",
+      "residence_code": null,
+      "date_reported": "2023"
+    },
+    {
+      "address": "SHOP NO 6 M S ENCLAVE 2 DHAKOLI ZIRAKPUR S A S NAGAR Punjab 140603",
+      "category": "Office Address",
+      "residence_code": null,
+      "date_reported": "2023"
+    },
+    {
+      "address": "H NO 200 1 SEC 45 A BURAIL SEC 47 Chandigarh 160047",
+      "category": "Residence Address",
+      "residence_code": null,
+      "date_reported": "2023"
+    },
+    {
+      "address": "BANSAL TRADING CO SHOP NO 6 M S ENCLAVE 2 DHAKOLI Punjab 140603",
+      "category": "Office Address",
+      "residence_code": null,
+      "date_reported": "2023"
+    }
+  ],
+  "contact_details": {
+    "telephones": [
+      {
+        "type": "Not Classified",
+        "number": "9815552491"
+      },
+      {
+        "type": "Mobile Phone",
+        "number": "9815552491"
+      },
+      {
+        "type": "Not Classified",
+        "number": "21212121"
+      },
+      {
+        "type": "Mobile Phone",
+        "number": "9815553491"
+      }
+    ],
+    "emails": [
+      "BANSALSOURAV.AUG29@GMAIL.COM",
+      "BANSALSOURAV.AUG29@GMAIL.COM",
+      "BANSALSOURAV.AUG29@GMAIL.COM",
+      "BANSALSOURAV@YAHOO.CO.IN"
+    ]
+  },
+  "employment_details": {
+    "account_type": "Auto Loan Personal",
+    "occupation": "Self Employed Professional",
+    "income": 103370,
+    "income_indicator": "Monthly",
+    "income_type": "Gross Income",
+    "date_reported": "2026"
+  },
+  "account_details": [
+    {
+      "member_name": "ICICI BANK",
+      "account_type": "Auto Loan Personal",
+      "account_number": "LACHD00052342739",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 2200000,
+      "current_balance": 2180488,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "84",
+      "emi_amount": 35285,
+      "payment_frequency": "Monthly",
+      "date_opened": "2026",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Property Loan",
+      "account_number": "TCHHF0349000100515159",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 5000000,
+      "current_balance": 4946862,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "10.15%",
+      "repayment_tenure": "178",
+      "emi_amount": 54498,
+      "payment_frequency": "Monthly",
+      "date_opened": "2026",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "AMEX",
+      "account_type": "Credit Card",
+      "account_number": "37300649095",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": 310000,
+      "sanctioned_amount": null,
+      "current_balance": 394,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": "Monthly",
+      "date_opened": "2026",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "12"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "MINTIFI",
+      "account_type": "Business Loan - Unsecured",
+      "account_number": "HOD5510118591",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 3000000,
+      "current_balance": 2198758,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "16.00%",
+      "repayment_tenure": "12",
+      "emi_amount": null,
+      "payment_frequency": "Bullet payment",
+      "date_opened": "2026",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Property Loan",
+      "account_number": "TCHHF0349000100424904",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 2550000,
+      "current_balance": 2458871,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "9.20%",
+      "repayment_tenure": "179",
+      "emi_amount": 26389,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Property Loan",
+      "account_number": "TCHIN0349000100409399",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 172944,
+      "current_balance": 166139,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "9.70%",
+      "repayment_tenure": "179",
+      "emi_amount": 1837,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Property Loan",
+      "account_number": "TCHIN0349000100409608",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 194743,
+      "current_balance": 187073,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "9.70%",
+      "repayment_tenure": "179",
+      "emi_amount": 2069,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "IDFC FIRST BANK",
+      "account_type": "Credit Card",
+      "account_number": "90300004369117",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": 86000,
+      "sanctioned_amount": null,
+      "current_balance": 30312,
+      "cash_limit": 8600,
+      "amount_overdue": 0,
+      "rate_of_interest": "46.20%",
+      "repayment_tenure": "3",
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Property Loan",
+      "account_number": "TCHHF0349000100402204",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 9200000,
+      "current_balance": 8826933,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "10.00%",
+      "repayment_tenure": "179",
+      "emi_amount": 99484,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Housing Loan",
+      "account_number": "TCHHL0349000100402174",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 10200000,
+      "current_balance": 9864421,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "8.70%",
+      "repayment_tenure": "234",
+      "emi_amount": 90213,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "TCHFL",
+      "account_type": "Housing Loan",
+      "account_number": "TCHHL0349000100402211",
+      "ownership_indicator": "Individual",
+      "account_status": "Open",
+      "credit_limit": null,
+      "sanctioned_amount": 7050000,
+      "current_balance": 6864503,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": "8.70%",
+      "repayment_tenure": "237",
+      "emi_amount": 62527,
+      "payment_frequency": "Monthly",
+      "date_opened": "2025",
+      "date_closed": null,
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "Jul 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "AXIS BANK",
+      "account_type": "Property Loan",
+      "account_number": "LTR004109896007",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 5000000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "176",
+      "emi_amount": 50713,
+      "payment_frequency": "Monthly",
+      "date_opened": "2023",
+      "date_closed": "2025",
+      "date_reported": "2025",
+      "payment_history": [
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "19"
+        },
+        {
+          "month_year": "Jan 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2023",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "AXIS BANK",
+      "account_type": "Housing Loan",
+      "account_number": "PHR004109895497",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 12716896,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "240",
+      "emi_amount": 112381,
+      "payment_frequency": "Monthly",
+      "date_opened": "2023",
+      "date_closed": "2025",
+      "date_reported": "2025",
+      "payment_history": [
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2023",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "SBI",
+      "account_type": "Business Loan – Priority Sector – Small Business",
+      "account_number": "00000040823674488",
+      "ownership_indicator": "Joint",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 500000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": null,
+      "rate_of_interest": "11.00%",
+      "repayment_tenure": "12",
+      "emi_amount": 42349,
+      "payment_frequency": "Monthly",
+      "date_opened": "2022",
+      "date_closed": "2023",
+      "date_reported": "2023",
+      "payment_history": [
+        {
+          "month_year": "Nov 2023",
+          "status": "STD"
+        },
+        {
+          "month_year": "Oct 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2023",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2022",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2022",
+          "status": "STD"
+        },
+        {
+          "month_year": "Oct 2022",
+          "status": "STD"
+        },
+        {
+          "month_year": "Sep 2022",
+          "status": "STD"
+        },
+        {
+          "month_year": "Aug 2022",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2022",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2022",
+          "status": "STD"
+        }
+      ]
+    },
+    {
+      "member_name": "IDFC FIRST BANK",
+      "account_type": "Housing Loan",
+      "account_number": "60663403",
+      "ownership_indicator": "Joint",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 7200000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "480",
+      "emi_amount": 56347,
+      "payment_frequency": "Monthly",
+      "date_opened": "2021",
+      "date_closed": "2025",
+      "date_reported": "2025",
+      "payment_history": [
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2022",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2022",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "IDFC FIRST BANK",
+      "account_type": "Credit Card",
+      "account_number": "30100000279721",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": 86000,
+      "sanctioned_amount": null,
+      "current_balance": 0,
+      "cash_limit": 8600,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2021",
+      "date_closed": "2026",
+      "date_reported": "2026",
+      "payment_history": [
+        {
+          "month_year": "May 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2026",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2025",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2024",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2023",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2023",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "SBI",
+      "account_type": "Auto Loan Personal",
+      "account_number": "00000038397694039",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 1000000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": null,
+      "rate_of_interest": "9.00%",
+      "repayment_tenure": "96",
+      "emi_amount": 4108,
+      "payment_frequency": "Monthly",
+      "date_opened": "2019",
+      "date_closed": "2020",
+      "date_reported": "2020",
+      "payment_history": [
+        {
+          "month_year": "Dec 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Nov 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Oct 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Sep 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Aug 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "May 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Apr 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Mar 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Feb 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jan 2020",
+          "status": "STD"
+        },
+        {
+          "month_year": "Dec 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Nov 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Oct 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Sep 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Aug 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "May 2019",
+          "status": "STD"
+        },
+        {
+          "month_year": "Apr 2019",
+          "status": "STD"
+        }
+      ]
+    },
+    {
+      "member_name": "SBI",
+      "account_type": "Housing Loan",
+      "account_number": "00000037701880100",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 250000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": null,
+      "rate_of_interest": "9.00%",
+      "repayment_tenure": "12",
+      "emi_amount": 246358,
+      "payment_frequency": "Monthly",
+      "date_opened": "2018",
+      "date_closed": "2018",
+      "date_reported": "2018",
+      "payment_history": [
+        {
+          "month_year": "Jul 2018",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2018",
+          "status": "STD"
+        },
+        {
+          "month_year": "May 2018",
+          "status": "STD"
+        }
+      ]
+    },
+    {
+      "member_name": "HDFCBANKEHDFCLTD LICENCECANCELLED",
+      "account_type": "Housing Loan",
+      "account_number": "516-611546233",
+      "ownership_indicator": "Joint",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 1500000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "240",
+      "emi_amount": 14725,
+      "payment_frequency": "Monthly",
+      "date_opened": "2014",
+      "date_closed": "2021",
+      "date_reported": "2021",
+      "payment_history": [
+        {
+          "month_year": "Mar 2021",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2021",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2020",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2020",
+          "status": "0"
+        }
+      ]
+    },
+    {
+      "member_name": "SBI",
+      "account_type": "Auto Loan Personal",
+      "account_number": "0065098451093",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 0,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": "60",
+      "emi_amount": 29454,
+      "payment_frequency": "Monthly",
+      "date_opened": "2010",
+      "date_closed": "2016",
+      "date_reported": "2016",
+      "payment_history": [
+        {
+          "month_year": "Mar 2016",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2016",
+          "status": "138"
+        },
+        {
+          "month_year": "Jan 2016",
+          "status": "109"
+        },
+        {
+          "month_year": "Dec 2015",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2015",
+          "status": "47"
+        },
+        {
+          "month_year": "Oct 2015",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2015",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2015",
+          "status": "17"
+        },
+        {
+          "month_year": "Jul 2015",
+          "status": "17"
+        },
+        {
+          "month_year": "Jun 2015",
+          "status": "16"
+        },
+        {
+          "month_year": "May 2015",
+          "status": "47"
+        },
+        {
+          "month_year": "Apr 2015",
+          "status": "16"
+        },
+        {
+          "month_year": "Mar 2015",
+          "status": "45"
+        },
+        {
+          "month_year": "Feb 2015",
+          "status": "14"
+        },
+        {
+          "month_year": "Jan 2015",
+          "status": "17"
+        },
+        {
+          "month_year": "Dec 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2014",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2014",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2014",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2013",
+          "status": "STD"
+        },
+        {
+          "month_year": "May 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2013",
+          "status": "DBT"
+        }
+      ]
+    },
+    {
+      "member_name": "HDFC BANK",
+      "account_type": "Business Loan – General",
+      "account_number": "10362221",
+      "ownership_indicator": "Joint",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 120000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": null,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2006",
+      "date_closed": "2007",
+      "date_reported": "2007",
+      "payment_history": [
+        {
+          "month_year": "Sep 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Aug 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "May 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Apr 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Mar 2007",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jan 2007",
+          "status": "STD"
+        },
+        {
+          "month_year": "Dec 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Nov 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Oct 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Sep 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Aug 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2006",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2006",
+          "status": "STD"
+        }
+      ]
+    },
+    {
+      "member_name": "PNB",
+      "account_type": "Business Loan – Priority Sector – Others",
+      "account_number": "325200PC00005378",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 74000,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2005",
+      "date_closed": "2006",
+      "date_reported": "2013",
+      "payment_history": [
+        {
+          "month_year": "Jun 2006",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2006",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2006",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2006",
+          "status": "STD"
+        }
+      ]
+    },
+    {
+      "member_name": "ICICI BANK",
+      "account_type": "Auto Loan Personal",
+      "account_number": "LACHD00002764841",
+      "ownership_indicator": "Joint",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 368500,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": null,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2004",
+      "date_closed": "2013",
+      "date_reported": "2013",
+      "payment_history": [
+        {
+          "month_year": "Jun 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2013",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2012",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Jun 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "May 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Apr 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Mar 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Feb 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Jan 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Dec 2010",
+          "status": "0"
+        },
+        {
+          "month_year": "Nov 2010",
+          "status": "0"
+        },
+        {
+          "month_year": "Oct 2010",
+          "status": "0"
+        },
+        {
+          "month_year": "Sep 2010",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2010",
+          "status": "0"
+        },
+        {
+          "month_year": "Jul 2010",
+          "status": "XXX"
+        }
+      ]
+    },
+    {
+      "member_name": "PNB",
+      "account_type": "Business Loan – Priority Sector – Others",
+      "account_number": "324800PC00022527",
+      "ownership_indicator": "Individual",
+      "account_status": "Closed",
+      "credit_limit": null,
+      "sanctioned_amount": 105800,
+      "current_balance": 0,
+      "cash_limit": null,
+      "amount_overdue": 0,
+      "rate_of_interest": null,
+      "repayment_tenure": null,
+      "emi_amount": null,
+      "payment_frequency": null,
+      "date_opened": "2011",
+      "date_closed": "2011",
+      "date_reported": "2013",
+      "payment_history": [
+        {
+          "month_year": "Oct 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2013",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Aug 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jul 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jun 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "May 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Apr 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Mar 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Feb 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Jan 2012",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Dec 2011",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Nov 2011",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Oct 2011",
+          "status": "XXX"
+        },
+        {
+          "month_year": "Sep 2011",
+          "status": "0"
+        },
+        {
+          "month_year": "Aug 2011",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jul 2011",
+          "status": "STD"
+        },
+        {
+          "month_year": "Jun 2011",
+          "status": "STD"
+        }
+      ]
+    }
+  ],
+  "enquiry_details": [
+    {
+      "member_name": "ADBIRLACAP",
+      "date": "2026",
+      "purpose": "Business Loan - Unsecured"
+    },
+    {
+      "member_name": "SBI CARD",
+      "date": "2026",
+      "purpose": "Credit Card"
+    },
+    {
+      "member_name": "KOTAK BANK",
+      "date": "2026",
+      "purpose": "Overdraft"
+    },
+    {
+      "member_name": "SBI CARD",
+      "date": "2026",
+      "purpose": "Credit Card"
+    },
+    {
+      "member_name": "ICICI BANK",
+      "date": "2026",
+      "purpose": "Auto Loan Personal"
+    },
+    {
+      "member_name": "KOTAK BANK",
+      "date": "2026",
+      "purpose": "Overdraft"
+    },
+    {
+      "member_name": "AMEX",
+      "date": "2026",
+      "purpose": "Credit Card"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2026",
+      "purpose": "Property Loan"
+    },
+    {
+      "member_name": "MINTIFI",
+      "date": "2026",
+      "purpose": "Business Loan – General"
+    },
+    {
+      "member_name": "KOTAK BANK",
+      "date": "2025",
+      "purpose": "Overdraft"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2025",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2025",
+      "purpose": "Personal Loan"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2025",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2025",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "TCHFL",
+      "date": "2024",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "KOTAK BANK",
+      "date": "2024",
+      "purpose": "Overdraft"
+    },
+    {
+      "member_name": "SBI",
+      "date": "2024",
+      "purpose": "Other"
+    },
+    {
+      "member_name": "AXIS BANK",
+      "date": "2024",
+      "purpose": "Business Loan – General"
+    },
+    {
+      "member_name": "AXIS BANK",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "AXIS BANK",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "SBI",
+      "date": "2023",
+      "purpose": "Other"
+    },
+    {
+      "member_name": "PNB",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "PNB",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "IDFC FIRST BANK",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "AXIS BANK",
+      "date": "2023",
+      "purpose": "Housing Loan"
+    },
+    {
+      "member_name": "KOTAK BANK",
+      "date": "2023",
+      "purpose": "Consumer Loan"
+    }
+  ]
+}
