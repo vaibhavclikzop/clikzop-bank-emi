@@ -1,0 +1,140 @@
+---
+title: "Clikzop Bank EMI REST API — Complete Reference Guide"
+sidebarTitle: "Overview"
+description: "Complete reference for the Clikzop Bank EMI REST API. Covers base URL, request format, authentication headers, pagination, and response structure."
+---
+
+The Clikzop Bank EMI API is a RESTful JSON API. All endpoints accept JSON request bodies and return JSON responses. Every request to a protected endpoint must include a valid Bearer token in the `Authorization` header, obtained by authenticating via `POST /api/login` (super admin) or `POST /api/tenant-login` (DSA tenant users). Unauthenticated requests to protected routes return a `401 Unauthorized` response immediately.
+
+## Base URL
+
+All API endpoints are served under the following base URL:
+
+```
+https://your-domain.com/api
+```
+
+<Note>
+  Replace `your-domain.com` with the domain provided by your account manager. All examples throughout this reference use this placeholder.
+</Note>
+
+## Request Format
+
+Every request must include the headers listed below. Protected endpoints additionally require a valid Bearer token; unauthenticated endpoints (`POST /api/login` and `POST /api/tenant-login`) do not.
+
+| Header | Value | Required |
+|---|---|---|
+| `Authorization` | `Bearer {token}` | Yes (all protected routes) |
+| `Accept` | `application/json` | Yes |
+| `Content-Type` | `application/json` | Yes (POST/PUT requests) |
+
+The following example shows a fully-formed request with all required headers:
+
+```bash
+curl -X GET "https://your-domain.com/api/get-profile-details" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json"
+```
+
+## Response Envelope
+
+Every response from the API — success or failure — is wrapped in a consistent JSON envelope:
+
+```json
+{
+  "status": true,
+  "message": "Operation successful",
+  "data": { ... }
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `status` | boolean | `true` on success, `false` on error |
+| `message` | string | Human-readable result message |
+| `data` | object / array / null | Response payload; `null` on error responses |
+
+When a request fails validation or encounters a server-side error, `status` is `false` and `message` describes the problem. See the [Errors](/api-reference/errors) page for the full list of status codes and error shapes.
+
+## Pagination
+
+List endpoints use offset-based pagination via path parameters rather than query strings. Pass `{offset}` and `{limit}` directly in the URL path:
+
+| Parameter | Description |
+|---|---|
+| `offset` | Zero-based starting position. Use `0` to start from the first record. |
+| `limit` | Maximum number of records to return per page. |
+
+The following endpoints support pagination:
+
+- `GET /api/get-loan/{offset}/{limit}/{statusID?}` — list loan applications
+- `GET /api/get-customers/{offset}/{limit}` — list customers
+- `GET /api/get-cibil-score-list/{offset}/{limit}` — list CIBIL score records
+
+**Example — retrieving loans in pages of 10:**
+
+```bash
+# First page — records 1–10
+GET https://your-domain.com/api/get-loan/0/10
+
+# Second page — records 11–20
+GET https://your-domain.com/api/get-loan/10/10
+
+# Third page — records 21–30
+GET https://your-domain.com/api/get-loan/20/10
+```
+
+<Tip>
+  Start with `offset=0` and increment by your `limit` value on each subsequent request until the returned array contains fewer items than your `limit`, which signals the last page.
+</Tip>
+
+## Authentication
+
+Two login endpoints issue Bearer tokens — choose based on the user type:
+
+| Endpoint | User Type |
+|---|---|
+| `POST /api/login` | Super admin users |
+| `POST /api/tenant-login` | DSA tenant users |
+
+These are the **only** two endpoints that do not require an `Authorization` header. Every other endpoint in this reference requires a valid token.
+
+For complete details on obtaining tokens, token structure, and logout, see the [Authentication](/authentication) page.
+
+<Note>
+  Tenant endpoints (such as `GET /api/tenant/get-company-profile`) require a token issued specifically for a DSA tenant user. Log in via `POST /api/tenant-login` to receive a token with the correct tenant context.
+</Note>
+
+## Rate Limiting
+
+The API may enforce rate limits on sensitive endpoints, including login. If you receive an HTTP `429 Too Many Requests` response, stop sending requests immediately and retry after a brief delay.
+
+```json
+{
+  "status": false,
+  "message": "Too Many Attempts.",
+  "data": null
+}
+```
+
+<Warning>
+  Implement exponential backoff in your retry logic. For example, wait 1 second before the first retry, 2 seconds before the second, 4 seconds before the third, and so on. Sustained hammering of rate-limited endpoints may result in your IP being blocked.
+</Warning>
+
+## Explore the API
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to obtain Bearer tokens, authenticate requests, and log out.
+  </Card>
+  <Card title="Customers" icon="users" href="/api-reference/customers/create">
+    Onboard customers, run KYC verification, and retrieve customer records.
+  </Card>
+  <Card title="Loans" icon="file-invoice-dollar" href="/api-reference/loans/create">
+    Create and manage loan applications, upload documents, and track status.
+  </Card>
+  <Card title="Credit & Financials" icon="chart-line" href="/api-reference/credit/cibil">
+    Fetch CIBIL scores, bank statements, ITR data, and GST details.
+  </Card>
+</CardGroup>

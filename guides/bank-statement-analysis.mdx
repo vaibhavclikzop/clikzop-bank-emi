@@ -1,0 +1,227 @@
+---
+title: "Analyze Bank Statements in Clikzop Bank EMI — Guide"
+sidebarTitle: "Bank Statements"
+description: "Upload bank statement PDFs or use the Account Aggregator consent flow to automatically extract and analyze transaction data for a loan."
+---
+
+Clikzop Bank EMI supports two methods for ingesting a customer's banking data: direct PDF upload with text extraction, and the Account Aggregator (AA) consent flow, which fetches data directly from the customer's bank. Both methods populate the same banking analysis layer, which computes closing-balance snapshots and monthly averages used by the Vanilla Report eligibility engine.
+
+## Two Methods for Bank Statement Import
+
+<Tabs>
+  <Tab title="PDF Upload">
+    Use this method when the customer provides a digitally generated bank statement PDF. The platform parses page-by-page text and stores the raw content for analysis.
+
+    <Steps>
+
+      <Step title="Create a Banking Record">
+        Create a banking master record for the loan before uploading the PDF. This establishes the account identity and pre-creates monthly detail rows (April through March).
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/save-banking" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "loan_id": 7,
+            "bank_id": 5,
+            "account_number": "1234567890",
+            "account_type_id": 1
+          }'
+        ```
+
+        **Response:**
+
+        ```json
+        {
+          "status": true,
+          "message": "Save successfully",
+          "data": []
+        }
+        ```
+
+        The platform creates 12 monthly rows (one per financial-year month, April to March) against this banking record.
+      </Step>
+
+      <Step title="Upload the Bank Statement PDF">
+        Upload the bank statement as a multipart form. The platform extracts text from each page and stores both the raw PDF and a structured text file.
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/upload-bank-statement" \
+          -H "Authorization: Bearer {your_token}" \
+          -F "loan_id=7" \
+          -F "pdf=@/path/to/bank_statement.pdf"
+        ```
+
+        **Response:**
+
+        ```json
+        {
+          "status": true,
+          "message": "PDF text extracted successfully.",
+          "data": {
+            "text": "================ PAGE 1 ================\n\nAccount No: 1234567890\n...",
+            "textLength": 18430
+          }
+        }
+        ```
+
+        <Warning>
+          Only upload digitally generated PDFs. Scanned or image-only PDFs will be rejected with `422 - "Scanned PDF detected. Please upload a digitally generated PDF."` because the text extraction layer cannot parse image content.
+        </Warning>
+      </Step>
+
+      <Step title="Record Monthly Amounts">
+        After extracting text, update individual monthly closing-balance fields on the banking detail rows. Call this endpoint for each month and each balance date point.
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/save-banking-amount" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "id": 34,
+            "loan_id": 7,
+            "filed_name": "closing_balance_5",
+            "amount": 42500.00
+          }'
+        ```
+
+        The platform recalculates `monthly_total` and `monthly_average` automatically from the five closing-balance fields after each update.
+      </Step>
+
+      <Step title="Get Banking Analysis">
+        Retrieve the parsed banking data for the loan. Pass the consent record `id` returned when you created the consent (for the Account Aggregator flow) or the banking master record `id` (for the PDF upload flow).
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/get-bank-statement" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{"id": 12}'
+        ```
+
+        The response includes transaction records and computed monthly summaries stored against the loan.
+      </Step>
+
+    </Steps>
+  </Tab>
+
+  <Tab title="Account Aggregator">
+    Use this method to fetch bank data directly from the customer's financial institution via the Account Aggregator network. The customer authorises data sharing through a consent link — no PDF needed.
+
+    <Steps>
+
+      <Step title="Initiate a Consent Request">
+        Create a consent request for the loan. The platform generates a consent link via our bank aggregation partner that you share with the customer.
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/create-banking-consent" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "loan_id": 7,
+            "from_date": "2023-01-01",
+            "to_date": "2024-01-01"
+          }'
+        ```
+
+        The customer's mobile number is resolved automatically from the loan record. The API stores the consent ID and URL internally.
+
+        **Response:**
+
+        ```json
+        {
+          "status": true,
+          "message": "Save successfully",
+          "data": []
+        }
+        ```
+      </Step>
+
+      <Step title="Share the Consent Link">
+        Retrieve the stored consent record to find the customer-facing URL and send it via SMS or your app.
+
+        The customer visits the URL, selects their bank, and authorises data sharing through the Account Aggregator interface. No further API call is needed until the customer completes this step.
+      </Step>
+
+      <Step title="Check Consent Status">
+        Poll this endpoint after the customer has completed the AA authorisation flow. Pass the consent record `id` returned when you created the consent — not any external reference string.
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/check-banking-consent" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{"id": 12}'
+        ```
+
+        When the session is complete, `fl_status` is set to `"COMPLETE"` on the consent record.
+
+        ```json
+        {
+          "status": true,
+          "message": "Save successfully",
+          "data": {
+            "status": "ACTIVE",
+            "fl_status": "COMPLETE"
+          }
+        }
+        ```
+      </Step>
+
+      <Step title="Fetch the Bank Statement">
+        Once the consent is active, call this endpoint to pull the actual transaction data from the bank via our bank aggregation partner and populate the banking detail records.
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/get-bank-statement" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{"id": 12}'
+        ```
+
+        The platform iterates over each account returned by the AA, creates banking master records, stores all individual transactions, and then automatically computes closing-balance snapshots for the 5th, 15th, 20th, 25th, and 30th of each month.
+
+        **Response:**
+
+        ```json
+        {
+          "status": true,
+          "message": "Save successfully",
+          "data": []
+        }
+        ```
+      </Step>
+
+      <Step title="Alternative: Initiate via Statement Upload Service">
+        To initiate a bank statement upload session through the platform's statement processing service, use this endpoint:
+
+        ```bash
+        curl -X POST "https://your-domain.com/api/initiate-bank-statement" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{"loan_id": 7}'
+        ```
+
+        This triggers an upload session via the statement analysis service and returns a session token you use to submit the statement file.
+      </Step>
+
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Computed Metrics
+
+After transactions are ingested (by either method), the platform computes and stores the following metrics against each monthly banking detail row:
+
+| Metric | Description |
+|---|---|
+| `closing_balance_5` | Closing balance on the 5th of the month |
+| `closing_balance_15` | Closing balance on the 15th of the month |
+| `closing_balance_20` | Closing balance on the 20th of the month |
+| `closing_balance_25` | Closing balance on the 25th of the month |
+| `closing_balance_30` | Closing balance on the 30th of the month |
+| `monthly_total` | Sum of the five closing-balance checkpoints |
+| `monthly_average` | Average of the five closing-balance checkpoints (`monthly_total / 5`) |
+| `total_debit` | Total outflows for the period (from transactions) |
+| `total_credit` | Total inflows for the period (from transactions) |
+
+<Note>
+  Bank statement data is used as a primary input to the Vanilla Report eligibility engine. Ensure all 12 months are populated before generating the report.
+</Note>

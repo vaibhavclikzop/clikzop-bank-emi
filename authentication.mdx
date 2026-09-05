@@ -1,0 +1,256 @@
+---
+title: "Authentication and Token Management — Clikzop Bank EMI"
+sidebarTitle: "Authentication"
+description: "Learn how to obtain a Bearer token via the login and tenant-login endpoints, then attach it to every API request using the Authorization header."
+---
+
+The Clikzop Bank EMI API uses Bearer token authentication. When you log in, the platform generates a personal access token scoped to your account and role. You include that token in the `Authorization` header of every subsequent request. Tokens are valid for **24 hours** from the time of issue; after they expire you simply log in again to obtain a fresh one.
+
+<Warning>
+  Never share your token. Tokens are personal and scoped to your account. If you suspect a token has been compromised, log out immediately to invalidate it and generate a new one.
+</Warning>
+
+## Obtaining a Token
+
+There are two login endpoints depending on your role. Use the tab that matches your account type.
+
+<Tabs>
+  <Tab title="Standard Login">
+    Use `POST /api/login` if you are a **super_admin** user. This endpoint also records a login audit entry (device, browser, IP, and coordinates) and requires latitude and longitude fields.
+
+    **Endpoint:** `POST https://your-domain.com/api/login`
+
+    <ParamField body="email" type="string" required>
+      Your registered email address.
+    </ParamField>
+
+    <ParamField body="password" type="string" required>
+      Your account password.
+    </ParamField>
+
+    <ParamField body="latitude" type="string" required>
+      Current device latitude, used for login audit logs. Pass any valid decimal value (e.g., `"19.0760"`).
+    </ParamField>
+
+    <ParamField body="longitude" type="string" required>
+      Current device longitude, used for login audit logs. Pass any valid decimal value (e.g., `"72.8777"`).
+    </ParamField>
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/login" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "email": "admin@example.com",
+        "password": "yourpassword",
+        "latitude": "19.0760",
+        "longitude": "72.8777"
+      }'
+    ```
+
+    **Success response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Super Admin Login",
+      "token": "2|abc123XYZsuperAdminToken",
+      "data": {
+        "id": 1,
+        "name": "Amit Verma",
+        "email": "admin@example.com",
+        "role": "super_admin",
+        "tenant_id": null
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="Tenant Login">
+    Use `POST /api/tenant-login` if you are a **dsa_admin** or any other tenant-scoped user. This endpoint rejects `super_admin` accounts — if you try to log in with one you will receive a `403` response with the message `Only tenant allowed`.
+
+    **Endpoint:** `POST https://your-domain.com/api/tenant-login`
+
+    <ParamField body="email" type="string" required>
+      Your registered email address.
+    </ParamField>
+
+    <ParamField body="password" type="string" required>
+      Your account password.
+    </ParamField>
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/tenant-login" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "email": "dsa@partner.com",
+        "password": "yourpassword"
+      }'
+    ```
+
+    **Success response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Login Successfully",
+      "token": "5|xyz789DSAtenantToken",
+      "data": {
+        "id": 14,
+        "name": "Priya DSA",
+        "email": "dsa@partner.com",
+        "role": "dsa_admin",
+        "tenant_id": 3
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Using Your Token
+
+Pass your token in the `Authorization` header as a Bearer credential on every protected request. Always include `Accept: application/json` so the API returns machine-readable error responses.
+
+```bash
+curl -X GET "https://your-domain.com/api/get-profile-details" \
+  -H "Authorization: Bearer 2|abc123XYZsuperAdminToken" \
+  -H "Accept: application/json"
+```
+
+For `POST` requests that send a JSON body, add `Content-Type: application/json`:
+
+```bash
+curl -X POST "https://your-domain.com/api/save-loan" \
+  -H "Authorization: Bearer 2|abc123XYZsuperAdminToken" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "customer_id": 42,
+    "loan_type_id": 1,
+    "loan_amount": 500000,
+    "tenure": 36,
+    "income_type_id": 1
+  }'
+```
+
+<Note>
+  Omitting the `Accept: application/json` header can cause some endpoints to return an HTML error page instead of a JSON response when validation fails.
+</Note>
+
+## Token Scopes and Roles
+
+Every token is tied to exactly one of the following roles. The role determines which endpoints you can access.
+
+| Role | Scope | Example capabilities |
+|---|---|---|
+| `super_admin` | Full platform access | Manage tenants, banks, loan types, income types, all customer and loan data, master catalogues |
+| `dsa_admin` | Tenant-scoped access | Manage customers, loans, KYC, CIBIL, banking, and ITR data within your own tenant |
+
+Beyond roles, individual endpoints may also require a named **permission** (e.g., `create_loan`, `view_loan`, `view_company_profile`). Your account manager or a `super_admin` can assign permissions to roles via `POST /api/save-role-permission`. Calling an endpoint you do not have permission for returns `403 Forbidden`.
+
+<Info>
+  DSA admin users always operate within their `tenant_id`. All records they create — customers, loans, documents — are automatically tagged with that tenant identifier and remain invisible to other tenants.
+</Info>
+
+## OTP Verification
+
+Some user journeys (mobile verification, password reset, registration) require a one-time password. The platform provides a two-step OTP flow.
+
+**Step 1 — Send an OTP** with `POST /api/send-otp`:
+
+<ParamField body="mobile" type="string" required>
+  A valid 10-digit Indian mobile number starting with 6–9 (e.g., `"9876543210"`).
+</ParamField>
+
+<ParamField body="purpose" type="string" required>
+  The reason for the OTP. Must be one of: `login`, `register`, `forgot_password`, `verify_mobile`.
+</ParamField>
+
+```bash
+curl -X POST "https://your-domain.com/api/send-otp" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "mobile": "9876543210",
+    "purpose": "verify_mobile"
+  }'
+```
+
+```json
+{
+  "status": true,
+  "message": "OTP sent successfully.",
+  "data": {
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "expires_at": "2024-08-01T10:35:00.000000Z"
+  }
+}
+```
+
+**Step 2 — Verify the OTP** with `POST /api/verify-otp`:
+
+<ParamField body="verification_id" type="string" required>
+  The UUID returned by the `/send-otp` call.
+</ParamField>
+
+<ParamField body="otp" type="string" required>
+  The 6-digit OTP received by the user.
+</ParamField>
+
+```bash
+curl -X POST "https://your-domain.com/api/verify-otp" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "otp": "123456"
+  }'
+```
+
+```json
+{
+  "status": true,
+  "message": "OTP verified successfully.",
+  "data": {
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "verified": true,
+    "verified_at": "2024-08-01T10:36:00.000000Z"
+  }
+}
+```
+
+## Logout
+
+Invalidate your current access token by calling `GET /api/logout`. This endpoint is restricted to `super_admin` accounts and deletes the token from the platform immediately.
+
+```bash
+curl -X GET "https://your-domain.com/api/logout" \
+  -H "Authorization: Bearer 2|abc123XYZsuperAdminToken" \
+  -H "Accept: application/json"
+```
+
+```json
+{
+  "status": true,
+  "message": "Logged out successfully"
+}
+```
+
+## Troubleshooting
+
+<Accordion title="What if my token expires?">
+  Tokens are valid for 24 hours. After expiry, requests return a `401 Unauthorized` response. To continue, log in again using `POST /api/login` (super_admin) or `POST /api/tenant-login` (dsa_admin) with your email and password. Store the new `token` value from the response and replace your old token in all requests.
+</Accordion>
+
+<Accordion title="Why am I getting 403 Forbidden?">
+  A `403` response means your token is valid but your account lacks the required role or permission for that endpoint. Common causes:
+
+  - You are using a `dsa_admin` token to call a `super_admin`-only endpoint (e.g., `GET /api/logout`, `GET /api/get-banks`, or `POST /api/create-partner`).
+  - You are using a `super_admin` token to call `POST /api/tenant-login`.
+  - Your role does not have a named permission such as `create_loan` or `view_loan` assigned. A super_admin can grant permissions via `POST /api/save-role-permission`.
+
+  If you believe you should have access, contact your platform administrator to review your role's permission set.
+</Accordion>

@@ -1,0 +1,356 @@
+---
+title: "ITR Data Retrieval API for Loan Income Verification"
+sidebarTitle: "ITR"
+description: "Fetch income tax return data for salaried and business applicants via IT portal credentials to seed the eligibility engine with verified income figures."
+---
+
+Income Tax Return (ITR) data provides verified income figures used in loan eligibility calculations. Clikzop Bank EMI fetches ITR data directly from the Income Tax portal using the applicant's credentials. For salaried applicants, the platform extracts salary income, tax paid, refund amounts, and filing history. For business or self-employed applicants, it retrieves a full P&L and balance sheet spanning multiple assessment years, including gross profit, turnover, EBITDA, and capital structure. Both flows automatically seed the eligibility engine with the relevant financial year entries.
+
+---
+
+## Fetch Salaried ITR Details
+
+<ParamField path="POST /api/get-salaried-itr-details" type="endpoint" />
+
+Fetch ITR data for a salaried loan applicant by authenticating with their Income Tax portal credentials. The platform retrieves the applicant's filing history, income breakdown, outstanding demands, and refund status across all available assessment years, then stores the data against the loan and seeds the eligibility engine automatically.
+
+<Warning>
+  This endpoint uses the applicant's Income Tax portal username and password to authenticate with the Income Tax portal. Ensure this data is collected via a secure, consent-based flow within your application.
+</Warning>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-salaried-itr-details" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": 42,
+    "loan_id": 1,
+    "loan_applicant_id": 7,
+    "username": "ABCDE1234F",
+    "password": "applicant_it_portal_password"
+  }'
+```
+
+### Parameters
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer whose ITR data you are fetching.
+</ParamField>
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to associate the ITR data with.
+</ParamField>
+
+<ParamField body="loan_applicant_id" type="integer" required>
+  The ID of the loan applicant record. Use this to differentiate primary applicants from co-applicants.
+</ParamField>
+
+<ParamField body="username" type="string" required>
+  The applicant's Income Tax portal username (typically their PAN in uppercase).
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The applicant's Income Tax portal password.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="status" type="boolean">
+  `true` on success.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="data.profileData" type="object">
+      The applicant's ITR profile. Key fields include:
+      - `pan_no` — PAN number
+      - `name` — Name as per PAN records
+      - `dob` — Date of birth
+      - `aadhaar` — Aadhaar number (masked)
+      - `email`, `mobile` — Contact details
+      - `residential_status` — Residential tax status
+      - `city`, `state_code`, `pin_code` — Address fields
+      - `pdfDownloadLink`, `excelDownloadLink` — Report download URLs
+    </ResponseField>
+    <ResponseField name="data.filingData" type="array">
+      Array of annual filing records. Each entry contains:
+      - `financial_year` — e.g., `"2023-24"`
+      - `assessment_year` — e.g., `"2024-25"`
+      - `form_name` — ITR form type (ITR-1, ITR-2, etc.)
+      - `filing_date` — Date of filing
+      - `salary` — Gross salary income for the year
+      - `house_property` — Income from house property
+      - `other_sources` — Income from other sources
+      - `capital_gains` — Capital gains
+      - `taxes_paid` — Total taxes paid
+      - `refund` — Refund amount, if any
+      - `net_tax_liability` — Net tax liability
+      - `immovable_assets`, `movable_assets`, `financial_assets` — Asset values
+      - `total_liabilities` — Total declared liabilities
+      - `delay`, `default`, `revised`, `late_fee` — Boolean compliance flags
+    </ResponseField>
+    <ResponseField name="data.filingHistory" type="array">
+      Historical filing records including `assessment_year`, `form`, `status`, `date`, and `downloadLink`.
+    </ResponseField>
+    <ResponseField name="data.outstandingDemand" type="array">
+      Array of outstanding tax demand records, each with `assessmentYear`, `outstandingDemandAmount`, `sectionCode`, and `dateOfService`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "status": true,
+  "message": "ITR saved successfully",
+  "data": {
+    "profileData": {
+      "pan_no": "ABCDE1234F",
+      "name": "JOHN DOE",
+      "dob": "1985-06-15",
+      "email": "john.doe@example.com",
+      "mobile": "9876543210",
+      "residential_status": "Resident",
+      "city": "Mumbai",
+      "state_code": "27",
+      "pin_code": "400001"
+    },
+    "filingData": {
+      "filingData": [
+        {
+          "financial_year": "2023-24",
+          "assessment_year": "2024-25",
+          "form_name": "ITR-1",
+          "filing_date": "31-07-2024",
+          "financialInfo": {
+            "salary": 1200000,
+            "other_sources": 24000,
+            "taxes_paid": 95000,
+            "refund": 12000,
+            "net_tax_liability": 83000,
+            "immovable_assets": 3000000,
+            "movable_assets": 150000,
+            "total_liabilities": 800000
+          },
+          "delay": false,
+          "default": false,
+          "revised": false,
+          "late_fee": false
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Fetch Business ITR Details
+
+<ParamField path="POST /api/get-business-itr-details" type="endpoint" />
+
+Fetch ITR data for a business or self-employed loan applicant. In addition to the income and filing data retrieved for salaried applicants, this endpoint also pulls a full financial statement for each assessment year — including P&L figures, balance sheet components, and EBITDA.
+
+<Note>
+  Business ITR data is stored per financial year and linked to the loan applicant, enabling multi-year analysis. Each year's data feeds into the eligibility engine automatically.
+</Note>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-business-itr-details" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_id": 42,
+    "loan_id": 1,
+    "username": "ABCDE1234F",
+    "password": "applicant_it_portal_password"
+  }'
+```
+
+### Parameters
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer whose business ITR data you are fetching.
+</ParamField>
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to associate the business ITR data with.
+</ParamField>
+
+<ParamField body="loan_applicant_id" type="integer">
+  The ID of the loan applicant record. Provide this to associate the ITR data with a specific applicant on the loan (for example, a co-applicant).
+</ParamField>
+
+<ParamField body="username" type="string" required>
+  The applicant's Income Tax portal username (typically their PAN in uppercase).
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The applicant's Income Tax portal password.
+</ParamField>
+
+### Response Fields
+
+The response includes the same `profileData` and `filingHistory` structure as the salaried endpoint, plus per-year financial data:
+
+<ResponseField name="data.filingData" type="array">
+  <Expandable title="Per-year financial data (itrYearlyFinancial)">
+    <ResponseField name="operating_turnover" type="number">
+      Revenue from business operations for the year.
+    </ResponseField>
+    <ResponseField name="non_operating_turnover" type="number">
+      Non-operating income for the year.
+    </ResponseField>
+    <ResponseField name="total_revenue" type="number">
+      Total revenue (operating + non-operating).
+    </ResponseField>
+    <ResponseField name="revenue_from_operations" type="number">
+      Net revenue from business operations.
+    </ResponseField>
+    <ResponseField name="gross_profit" type="number">
+      Gross profit after direct costs.
+    </ResponseField>
+    <ResponseField name="profit_before_tax" type="number">
+      Profit before tax deductions.
+    </ResponseField>
+    <ResponseField name="profit_after_tax" type="number">
+      Net profit after tax.
+    </ResponseField>
+    <ResponseField name="ebitda" type="number">
+      Earnings before interest, taxes, depreciation, and amortisation.
+    </ResponseField>
+    <ResponseField name="direct_cost" type="number">
+      Cost of goods sold or direct cost of services.
+    </ResponseField>
+    <ResponseField name="purchases" type="number">
+      Total purchases for the year.
+    </ResponseField>
+    <ResponseField name="interest_expense" type="number">
+      Total interest expense charged during the year.
+    </ResponseField>
+    <ResponseField name="total_expense" type="number">
+      Sum of all operating and non-operating expenses.
+    </ResponseField>
+    <ResponseField name="total_fixed_asset" type="number">
+      Total fixed assets on the balance sheet.
+    </ResponseField>
+    <ResponseField name="total_current_asset" type="number">
+      Total current assets.
+    </ResponseField>
+    <ResponseField name="total_assets" type="number">
+      Total assets (fixed + current).
+    </ResponseField>
+    <ResponseField name="cash_and_cash_eqv" type="number">
+      Cash and cash equivalents.
+    </ResponseField>
+    <ResponseField name="trade_receivables" type="number">
+      Outstanding trade receivables.
+    </ResponseField>
+    <ResponseField name="total_inventory" type="number">
+      Total inventory value.
+    </ResponseField>
+    <ResponseField name="total_equity" type="number">
+      Total equity on the balance sheet.
+    </ResponseField>
+    <ResponseField name="total_liability" type="number">
+      Total liabilities.
+    </ResponseField>
+    <ResponseField name="total_current_liability" type="number">
+      Total current liabilities.
+    </ResponseField>
+    <ResponseField name="trade_payable" type="number">
+      Outstanding trade payables.
+    </ResponseField>
+    <ResponseField name="total_investment" type="number">
+      Total investments.
+    </ResponseField>
+    <ResponseField name="total_el" type="number">
+      Total external liabilities.
+    </ResponseField>
+    <ResponseField name="total_tax" type="number">
+      Total tax paid or payable for the year.
+    </ResponseField>
+    <ResponseField name="income_from_bp" type="number">
+      Income from business or profession.
+    </ResponseField>
+    <ResponseField name="income_from_salary" type="number">
+      Salary income component, if any.
+    </ResponseField>
+    <ResponseField name="income_from_hp" type="number">
+      Income from house property.
+    </ResponseField>
+    <ResponseField name="income_from_os" type="number">
+      Income from other sources.
+    </ResponseField>
+    <ResponseField name="income_from_cg" type="number">
+      Capital gains income.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "status": true,
+  "message": "Save Successfully",
+  "data": []
+}
+```
+
+---
+
+## Save Vanilla Report Year
+
+<ParamField path="POST /api/save-vanilla-year" type="endpoint" />
+
+Manually add a financial year entry to the eligibility report for a loan. This endpoint is ordinarily called automatically when ITR data is fetched, but you can use it to seed the eligibility engine with custom financial year data when working with externally sourced figures.
+
+<Warning>
+  This endpoint is currently non-operational in the platform (`"This api not working please connect to developer."`). ITR fetch endpoints (`get-salaried-itr-details`, `get-business-itr-details`) seed the eligibility engine automatically. Use those flows instead.
+</Warning>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-vanilla-year" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "customer_id": 42,
+    "financial_year": "2023-24",
+    "turn_over": 2400000,
+    "gross_profit": 480000
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to add the financial year entry for.
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer linked to the loan.
+</ParamField>
+
+<ParamField body="financial_year" type="string" required>
+  The financial year string, e.g., `"2023-24"`.
+</ParamField>
+
+<ParamField body="turn_over" type="number" required>
+  Annual turnover for the year.
+</ParamField>
+
+<ParamField body="gross_profit" type="number" required>
+  Gross profit for the year.
+</ParamField>

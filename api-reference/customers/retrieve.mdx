@@ -1,0 +1,235 @@
+---
+title: "Retrieve Customer Profiles, Details, and Loan History"
+sidebarTitle: "Retrieve Customers"
+description: "GET /api/get-customers, GET /api/get-customer-details, and GET /api/get-customer-loan — list, retrieve, and view loan history for customers."
+---
+
+These read endpoints give you full visibility into your customer base. Fetch a paginated list of all customers in your tenant, drill into a single customer's verified documents, bank accounts, and company details, or pull the complete loan history for any individual. All sensitive fields — PAN, Aadhaar, mobile — are masked in every response.
+
+---
+
+## List all customers
+
+Retrieve a paginated list of customers registered under your tenant. Use `offset` and `limit` to page through results.
+
+**GET** `/api/get-customers/{offset}/{limit}`
+
+<Note>
+  Requires `Authorization: Bearer {token}`. Only customers belonging to your tenant are returned.
+</Note>
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="offset" type="integer" required>
+      Zero-based starting position. Use `0` for the first page.
+    </ParamField>
+
+    <ParamField path="limit" type="integer" required>
+      Number of records to return. Keep this at 50 or below for optimal performance.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL — first 20 customers"
+    curl -X GET "https://your-domain.com/api/get-customers/0/20" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 1,
+          "name": "Priya Sharma",
+          "masked_number": "98765*****",
+          "email": "priya@example.com",
+          "pan_masked": "ABCXX1234F",
+          "pan_verified": 1,
+          "adhar_verified": 0,
+          "created_at": "2024-04-10T08:00:00.000000Z"
+        },
+        {
+          "id": 2,
+          "name": "Rahul Verma",
+          "masked_number": "91234*****",
+          "email": "rahul@example.com",
+          "pan_masked": "BXXXR5678K",
+          "pan_verified": 1,
+          "adhar_verified": 1,
+          "created_at": "2024-04-12T11:30:00.000000Z"
+        }
+      ],
+      "pagination": {
+        "total_records": 142,
+        "offset": 0,
+        "limit": 20,
+        "current_page": 1,
+        "total_pages": 8,
+        "has_more": true
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Get full customer profile
+
+Fetch the complete profile for a single customer by their internal ID. The response bundles verified documents, bank accounts on file, company details, and court/background check summaries.
+
+**GET** `/api/get-customer-details/{id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="id" type="integer" required>
+      The internal customer ID returned by `/api/save-customer` or the listing endpoint.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-customer-details/42" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": {
+        "customerDetails": {
+          "id": 42,
+          "name": "Priya Sharma",
+          "masked_number": "98765*****",
+          "email": "priya@example.com",
+          "dob": "1990-04-15",
+          "city": "Mumbai",
+          "state": "Maharashtra",
+          "pincode": "400001",
+          "pan_masked": "ABCXX1234F",
+          "aadhar_masked": "XXXXXXXX9012",
+          "pan_verified": 1,
+          "adhar_verified": 1,
+          "created_at": "2024-04-10T08:00:00.000000Z"
+        },
+        "customerDocuments": [
+          {
+            "id": 5,
+            "document_name": "PAN Card",
+            "document_no_last4": "234F",
+            "is_verified": true,
+            "verified_at": "2024-04-10T08:05:00.000000Z"
+          }
+        ],
+        "CustomerBanks": [
+          {
+            "id": 3,
+            "account_holder_name": "Priya Sharma",
+            "account_no_last4": "7890",
+            "ifsc": "HDFC0001234",
+            "bank_id": 2
+          }
+        ],
+        "customerCompanyDetails": [],
+        "customerCourtSummary": []
+      }
+    }
+    ```
+
+    <Expandable title="Response fields">
+      <ResponseField name="data.customerDetails.id" type="integer">
+        Internal customer ID.
+      </ResponseField>
+      <ResponseField name="data.customerDetails.name" type="string">
+        Full name of the customer.
+      </ResponseField>
+      <ResponseField name="data.customerDetails.masked_number" type="string">
+        Mobile number with last 5 digits masked.
+      </ResponseField>
+      <ResponseField name="data.customerDetails.email" type="string">
+        Email address on file.
+      </ResponseField>
+      <ResponseField name="data.customerDetails.pan_masked" type="string">
+        Masked PAN (e.g., `ABCXX1234F`).
+      </ResponseField>
+      <ResponseField name="data.customerDetails.pan_verified" type="integer">
+        `1` if PAN has been verified.
+      </ResponseField>
+      <ResponseField name="data.customerDetails.adhar_verified" type="integer">
+        `1` if Aadhaar has been verified.
+      </ResponseField>
+      <ResponseField name="data.customerDocuments" type="array">
+        List of identity documents attached to the customer, each with verification status and last-4 of the document number.
+      </ResponseField>
+      <ResponseField name="data.CustomerBanks" type="array">
+        Bank accounts on file, with masked account numbers (last 4 digits visible) and IFSC codes.
+      </ResponseField>
+      <ResponseField name="data.customerCompanyDetails" type="array">
+        Company/CIN details if the customer is a business applicant, including directors.
+      </ResponseField>
+      <ResponseField name="data.customerCourtSummary" type="array">
+        Background and court check summary records, if a check has been initiated.
+      </ResponseField>
+    </Expandable>
+  </Tab>
+</Tabs>
+
+---
+
+## Get loan history for a customer
+
+Retrieve all loan applications associated with a specific customer. Use this to display a borrower's full history in your DSA portal or CRM.
+
+**GET** `/api/get-customer-loan/{customer_id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="customer_id" type="integer" required>
+      The internal ID of the customer whose loans you want to retrieve.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-customer-loan/42" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 7,
+          "loan_number": "LN-5F3A2C001",
+          "loan_type_id": 2,
+          "loan_amount": "500000.00",
+          "tenure_months": 36,
+          "status_id": 3,
+          "created_at": "2024-04-10T08:10:00.000000Z"
+        },
+        {
+          "id": 15,
+          "loan_number": "LN-7B9D4E002",
+          "loan_type_id": 1,
+          "loan_amount": "1200000.00",
+          "tenure_months": 120,
+          "status_id": 1,
+          "created_at": "2024-05-01T14:20:00.000000Z"
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use this endpoint to show a customer's full loan history in your application. Pair each `id` from this response with `GET /api/get-loan-details/{id}` to load the complete detail view for any individual loan.
+</Tip>

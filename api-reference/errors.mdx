@@ -1,0 +1,125 @@
+---
+title: "Clikzop Bank EMI API Error Codes and Troubleshooting"
+sidebarTitle: "Errors"
+description: "Reference for HTTP status codes and error responses returned by the Clikzop Bank EMI API, with causes and suggested fixes for each error."
+---
+
+When a request fails, the Clikzop Bank EMI API returns an HTTP status code along with a JSON body containing `status: false` and an explanatory `message`. Understanding these codes and their causes lets you diagnose issues quickly and build resilient integrations that handle errors gracefully without requiring manual intervention.
+
+## Error Response Format
+
+All error responses follow the same envelope structure as successful responses, with `status` set to `false` and `data` set to `null`:
+
+```json
+{
+  "status": false,
+  "message": "Unauthenticated.",
+  "data": null
+}
+```
+
+<Note>
+  Some error responses — particularly `422 Unprocessable Entity` — include an additional `errors` field containing field-level validation messages. See the [Validation Errors](#validation-errors-422) section below.
+</Note>
+
+## HTTP Status Codes
+
+| Code | Name | Cause | Fix |
+|---|---|---|---|
+| `200` | OK | Request succeeded | — |
+| `201` | Created | Resource was successfully created | — |
+| `400` | Bad Request | Invalid request body or a required field is missing | Check the request body against the `ParamField` docs for the relevant endpoint |
+| `401` | Unauthorized | Missing, expired, or invalid Bearer token | Re-authenticate via `POST /api/login` or `POST /api/tenant-login` to obtain a fresh token |
+| `403` | Forbidden | Token is valid but the authenticated user lacks the required role or permission | Contact your account administrator to grant the needed role or permission |
+| `404` | Not Found | The requested resource ID does not exist | Verify the resource ID in your request path is correct |
+| `422` | Unprocessable Entity | One or more input fields failed validation | Inspect the `errors` field in the response body for field-level details |
+| `429` | Too Many Requests | Rate limit exceeded | Stop sending requests and retry using exponential backoff |
+| `500` | Internal Server Error | An unexpected server-side error occurred | Contact Clikzop support with the full request details and timestamp |
+
+## Validation Errors (422)
+
+When input validation fails, the API returns a `422` status and includes an `errors` object alongside the standard envelope fields. Each key in `errors` corresponds to a request field, and its value is an array of human-readable messages describing what is wrong:
+
+```json
+{
+  "status": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "mobile": ["The mobile must be 10 digits."],
+    "pan_no": ["The PAN format is invalid."]
+  }
+}
+```
+
+Iterate over the `errors` object in your client code to surface the appropriate message to your users or logs. Fix each flagged field and resubmit the request.
+
+<Tip>
+  All field names in the `errors` object match the parameter names documented in the `ParamField` tables for each endpoint. Use those tables as a quick cross-reference when a validation error refers to an unfamiliar field.
+</Tip>
+
+## Common Errors
+
+<AccordionGroup>
+  <Accordion title="I keep getting 401 Unauthorized">
+    Your Bearer token has likely expired or was never included in the request.
+
+    **Steps to resolve:**
+
+    1. Call `POST /api/login` (super admin) or `POST /api/tenant-login` (DSA tenant user) with valid credentials to receive a fresh token.
+    2. Copy the token from the `data.token` field in the response.
+    3. Include it in subsequent requests as `Authorization: Bearer {token}`.
+
+    If you continue to receive `401` after re-authenticating, confirm that the `Authorization` header is spelled correctly and that there is no extra whitespace around the token value.
+  </Accordion>
+
+  <Accordion title="I'm getting 403 Forbidden on loan endpoints">
+    The `GET /api/get-loan` and `GET /api/get-loan-details` endpoints require the `view_loan` permission. The `POST /api/save-loan` endpoint requires the `create_loan` permission. If your account lacks these, the API returns `403`.
+
+    **Steps to resolve:**
+
+    1. Ask your account administrator to navigate to **Role & Permission Management**.
+    2. Grant the `view_loan` or `create_loan` permission to your role.
+    3. Log out and log back in so your token reflects the updated permissions.
+
+    <Note>
+      Super admin users bypass permission checks. If you are logged in as a super admin and still receive `403`, verify that you are using the correct token and that it has not been revoked.
+    </Note>
+  </Accordion>
+
+  <Accordion title="My 422 error mentions 'mobile must be 10 digits'">
+    Indian mobile numbers must be exactly **10 digits** with no country code prefix, spaces, or dashes.
+
+    | ✅ Accepted | ❌ Rejected |
+    |---|---|
+    | `9876543210` | `+919876543210` |
+    | `8123456789` | `091-98765-43210` |
+
+    Strip any country code (`+91` or `0`) and formatting characters before submitting the `mobile` field.
+  </Accordion>
+
+  <Accordion title="My CIBIL or document verification request returns an error">
+    CIBIL score retrieval (`POST /api/get-cibil-data`, `POST /api/fetch-cibil-score`) and document verification endpoints (`POST /api/check-aadhar-card`, `POST /api/check-pan-card`, etc.) rely on third-party APIs (such as Karza). These services may occasionally experience temporary downtime or return unexpected errors.
+
+    **Steps to resolve:**
+
+    1. Wait 30–60 seconds and retry the request.
+    2. Check whether the input data (PAN number, Aadhaar number, etc.) is correctly formatted.
+    3. If the error persists beyond a few minutes, contact Clikzop support with the request payload and the full error response body, including the `message` field.
+
+    <Warning>
+      Do not retry verification requests in a tight loop. Repeated failed attempts against third-party KYC providers may consume your API quota or trigger upstream rate limits.
+    </Warning>
+  </Accordion>
+
+  <Accordion title="I'm getting 403 on tenant endpoints">
+    Endpoints under the `/api/tenant/` prefix — such as `GET /api/tenant/get-company-profile` — require both the `dsa_admin` role **and** a token issued by `POST /api/tenant-login`. Standard super-admin tokens do not carry tenant context and will be rejected with `403`.
+
+    **Steps to resolve:**
+
+    1. Authenticate using `POST /api/tenant-login` instead of `POST /api/login`. Provide your DSA tenant credentials.
+    2. Use the token returned from `tenant-login` for all tenant-scoped endpoints.
+    3. Confirm that your account has the `view_company_profile` permission if you are accessing `GET /api/tenant/get-company-profile`.
+
+    If your `tenant-login` credentials are not working, contact your super admin to verify that the DSA partner account has been correctly provisioned via `POST /api/create-partner`.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,198 @@
+---
+title: "Loan Document Checklist: Fetch and Upload Files via API"
+sidebarTitle: "Checklist"
+description: "GET /api/get-loan-check-list and POST /api/upload-check-list-document — fetch required documents for a loan and upload completed documents."
+---
+
+Each loan type has a specific document checklist generated at loan creation. Use these endpoints to fetch the required list and upload files as you collect them from your customer. The checklist is auto-populated based on the loan type and the income category selected at loan creation — you never need to build it manually. Track upload progress by checking the `is_uploaded` flag on each checklist item before advancing the loan to credit assessment.
+
+---
+
+## Fetch the document checklist
+
+Retrieve the complete list of required documents for a specific loan, along with the upload status of each item.
+
+**GET** `/api/get-loan-check-list/{id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="id" type="integer" required>
+      The internal loan ID. Use the `id` returned by `POST /api/save-loan`.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-loan-check-list/7" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 1,
+          "name": "Bank Statement (6 months)",
+          "mime_type": null,
+          "file_size": null,
+          "uploaded_by": null,
+          "is_uploaded": false
+        },
+        {
+          "id": 2,
+          "name": "PAN Card Copy",
+          "mime_type": "application/pdf",
+          "file_size": 204800,
+          "uploaded_by": 3,
+          "is_uploaded": true
+        },
+        {
+          "id": 3,
+          "name": "ITR (2 years)",
+          "mime_type": null,
+          "file_size": null,
+          "uploaded_by": null,
+          "is_uploaded": false
+        },
+        {
+          "id": 4,
+          "name": "Aadhaar Card Copy",
+          "mime_type": null,
+          "file_size": null,
+          "uploaded_by": null,
+          "is_uploaded": false
+        }
+      ]
+    }
+    ```
+
+    <Expandable title="Response fields">
+      <ResponseField name="data[].id" type="integer">
+        Checklist item ID. Use this as `loan_document_id` when uploading a file for this item.
+      </ResponseField>
+      <ResponseField name="data[].name" type="string">
+        Human-readable document name (e.g., `Bank Statement (6 months)`).
+      </ResponseField>
+      <ResponseField name="data[].is_uploaded" type="boolean">
+        `true` if a file has been uploaded for this checklist item, `false` if pending.
+      </ResponseField>
+      <ResponseField name="data[].mime_type" type="string">
+        MIME type of the uploaded file (e.g., `application/pdf`). `null` if not yet uploaded.
+      </ResponseField>
+      <ResponseField name="data[].file_size" type="integer">
+        File size in bytes. `null` if not yet uploaded.
+      </ResponseField>
+      <ResponseField name="data[].uploaded_by" type="integer">
+        User ID of the team member who uploaded the file. `null` if not yet uploaded.
+      </ResponseField>
+    </Expandable>
+  </Tab>
+</Tabs>
+
+---
+
+## Upload a checklist document
+
+Upload a file against a specific checklist item. The platform securely stores the file, verifies its integrity, and marks the checklist item as uploaded.
+
+**POST** `/api/upload-check-list-document`
+
+<Note>
+  This endpoint accepts `multipart/form-data`. Do not send JSON — use form fields and a file attachment.
+</Note>
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="loan_id" type="integer" required>
+      Internal ID of the loan this document belongs to.
+    </ParamField>
+
+    <ParamField body="loan_document_id" type="integer" required>
+      ID of the checklist item to fulfil. Use the `id` value from `GET /api/get-loan-check-list`.
+    </ParamField>
+
+    <ParamField body="file" type="file" required>
+      The document file. Accepted formats: `pdf`, `jpg`, `jpeg`, `png`. Maximum size: **5 MB**.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL — multipart upload"
+    curl -X POST "https://your-domain.com/api/upload-check-list-document" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json" \
+      -F "loan_id=7" \
+      -F "loan_document_id=1" \
+      -F "file=@/path/to/bank_statement.pdf"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Document uploaded successfully",
+      "data": {
+        "id": 1,
+        "user_details": {
+          "id": 3,
+          "name": "Agent Asha"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Warning>
+  The maximum file size is **5 MB**. Uploading a file larger than 5 MB returns a `422 Unprocessable Entity` validation error. Compress or split large bank statements before uploading.
+</Warning>
+
+---
+
+## Retrieve uploaded documents
+
+Fetch a document uploaded against a specific loan checklist item. The response triggers a direct file download.
+
+**GET** `/api/get-uploaded-document/{id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="id" type="integer" required>
+      The ID of the specific loan document (checklist item) whose file you want to retrieve. Use the `id` from `GET /api/get-loan-check-list`.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-uploaded-document/1" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json" \
+      --output "downloaded_document.pdf"
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  The `/api/get-uploaded-document` endpoint returns a direct file download, not a JSON envelope. Your HTTP client will receive the raw file bytes. Use the `--output` flag in cURL or handle the binary response in your SDK to save the file locally.
+</Note>
+
+---
+
+## Upload tracking workflow
+
+<Steps>
+  <Step title="Fetch the checklist">
+    Call `GET /api/get-loan-check-list/{loan_id}` to get all required documents and their current upload status.
+  </Step>
+  <Step title="Collect and upload files">
+    For each pending item (`is_uploaded: false`), collect the document from your customer and call `POST /api/upload-check-list-document` using the item's `id` as `loan_document_id`.
+  </Step>
+  <Step title="Verify completion">
+    Re-fetch the checklist and confirm that all required items show `is_uploaded: true` before advancing the loan to credit assessment.
+  </Step>
+</Steps>
+
+<Tip>
+  Check that all required checklist items show `is_uploaded: true` before proceeding to credit assessment. Incomplete document collections are a common cause of loan processing delays.
+</Tip>

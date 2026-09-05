@@ -1,0 +1,212 @@
+---
+title: "Loan Eligibility Report API — Vanilla Report Engine"
+sidebarTitle: "Eligibility"
+description: "Generate and manage loan eligibility reports using the Vanilla Report engine, which computes FOIR, LTV, max EMI, and eligible loan amount."
+---
+
+The Vanilla Report is Clikzop Bank EMI's loan eligibility engine. It aggregates ITR, GST, banking, and CIBIL data to compute key credit metrics and the maximum eligible loan amount. The engine works by collecting per-field income values across multiple financial years, applying configurable eligibility percentages to derive an appraised monthly income, and then combining that figure with the applicant's CIBIL obligations and the platform's FOIR and LTV parameters to produce a final eligibility output. Before generating the eligibility report, ensure you have completed all upstream data collection steps — CIBIL fetch, bank statement analysis, and ITR or GST data retrieval — so that the engine has complete inputs.
+
+---
+
+## Generate Bank Eligibility Report
+
+<ParamField path="POST /api/generate-bank-eligibility" type="endpoint" />
+
+<Warning>
+  This endpoint is currently a stub. It accepts and validates `loan_id` but does not yet compute or return eligibility metrics. Contact your platform developer before building against this endpoint. To compute eligibility, use the Vanilla Report engine endpoints (`POST /api/update-vanilla-values`, `POST /api/update-vanilla-summary`) which perform the full FOIR, LTV, and max EMI calculation.
+</Warning>
+
+Trigger generation of a bank eligibility report for a loan. Once implemented, this endpoint will read all available eligibility data collected for the loan and produce the key credit metrics used in sanctioning decisions.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/generate-bank-eligibility" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan for which to generate the eligibility report.
+</ParamField>
+
+---
+
+## Add a Financial Year to the Eligibility Report
+
+<ParamField path="POST /api/save-vanilla-year" type="endpoint" />
+
+Manually add a financial year entry to the eligibility report for a loan. This initialises the year record, creates field-level rows for all active eligibility fields, and seeds a report summary record if one does not already exist.
+
+<Warning>
+  This endpoint is currently non-operational in the platform (`"This api not working please connect to developer."`). Financial year entries are created automatically when ITR data is fetched via `POST /api/get-salaried-itr-details` or `POST /api/get-business-itr-details`. Contact your platform developer before using this endpoint directly.
+</Warning>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-vanilla-year" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "customer_id": 42,
+    "financial_year": "2023-24",
+    "turn_over": 2400000,
+    "gross_profit": 480000
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to add the financial year to.
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer linked to the loan.
+</ParamField>
+
+<ParamField body="financial_year" type="string" required>
+  Financial year in `YYYY-YY` format, e.g., `"2023-24"`.
+</ParamField>
+
+<ParamField body="turn_over" type="number" required>
+  Annual turnover for the year.
+</ParamField>
+
+<ParamField body="gross_profit" type="number" required>
+  Gross profit for the year.
+</ParamField>
+
+---
+
+## Update Eligibility Field Values
+
+<ParamField path="POST /api/update-vanilla-values" type="endpoint" />
+
+Update the amount for a specific field value row in the eligibility report, and set the eligibility percentage for the corresponding field. After saving, the platform recalculates all summary metrics — total annual income, appraised monthly income, FOIR, max EMI, and eligibility — automatically.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/update-vanilla-values" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "field_id": 3,
+    "id": 27,
+    "amount": 480000,
+    "eligible_percentage": 85
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan. Used to trigger the summary recalculation after the update.
+</ParamField>
+
+<ParamField body="field_id" type="integer" required>
+  The ID of the eligibility field record. This identifies which field's eligibility percentage you are updating.
+</ParamField>
+
+<ParamField body="id" type="integer" required>
+  The ID of the per-year, per-field value row to update.
+</ParamField>
+
+<ParamField body="amount" type="number" required>
+  The income or financial figure to record for this field and year.
+</ParamField>
+
+<ParamField body="eligible_percentage" type="number" required>
+  The percentage of the `amount` to count as eligible income (0–100). This controls the weight given to this field in the eligibility computation.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+---
+
+## Update Eligibility Report Summary
+
+<ParamField path="POST /api/update-vanilla-summary" type="endpoint" />
+
+Update a specific field in the eligibility report summary for a loan. Use this to manually set parameters such as `foir`, `ltv`, `interest_rate`, `tenor`, or any other summary field. After the update, the platform recalculates the full summary automatically.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/update-vanilla-summary" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "id": 4,
+    "field_name": "foir",
+    "value": 45
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan whose summary you are updating.
+</ParamField>
+
+<ParamField body="id" type="integer" required>
+  The ID of the eligibility report summary record.
+</ParamField>
+
+<ParamField body="field_name" type="string" required>
+  The name of the summary field to update. Supported fields include `foir`, `ltv`, `interest_rate`, `tenor`, `appraised_monthly_income`, and `appraised_obligations`.
+</ParamField>
+
+<ParamField body="value" type="string" required>
+  The new value for the field.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+---
+
+## Key Eligibility Metrics Explained
+
+The eligibility engine computes the following credit metrics. Use `POST /api/update-vanilla-summary` to configure FOIR, LTV, interest rate, and tenure before running the eligibility calculation.
+
+| Metric | Formula | Ideal Range |
+|---|---|---|
+| FOIR | Fixed monthly obligations ÷ Net monthly income × 100 | < 50% |
+| LTV | Loan amount ÷ Property or collateral value × 100 | < 80% |
+| Max EMI | Appraised monthly income × (FOIR ÷ 100) − Appraised obligations | Higher is better |
+| EMI Factor | PMT(annual_rate/12, tenure_months, 100000) | Depends on rate and tenure |
+| Max Eligible Loan | Max EMI ÷ EMI Factor × 100,000 | Depends on tenure |
+
+<Tip>
+  Use `GET /api/get-vanilla-field` (super_admin only) to see which fields are configured in the eligibility engine for your platform, and to verify that field-level eligibility percentages and display ordering are set correctly before running eligibility calculations.
+</Tip>

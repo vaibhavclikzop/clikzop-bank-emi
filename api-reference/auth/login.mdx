@@ -1,0 +1,264 @@
+---
+title: "Clikzop Bank EMI Login and Tenant Authentication API"
+sidebarTitle: "Login"
+description: "POST /api/login authenticates platform users; POST /api/tenant-login handles DSA tenants. Both return a Bearer token for all subsequent API requests."
+---
+
+Clikzop Bank EMI provides two distinct login endpoints depending on your account type. Use `POST /api/login` to authenticate as a `super_admin` or platform-level user. Use `POST /api/tenant-login` if your account belongs to a DSA partner organization — this endpoint blocks `super_admin` accounts and is designed exclusively for tenant users. Both endpoints return a short-lived Bearer token (valid for 24 hours) that you must include in the `Authorization` header of every subsequent authenticated request.
+
+---
+
+## POST /api/login
+
+Authenticate a platform user (typically `super_admin`). On success, the server issues a Bearer token with a 24-hour expiry and records a login event including your device, browser, and geolocation context.
+
+**No authentication required** — this is a public endpoint.
+
+### Request Body
+
+<ParamField body="email" type="string" required>
+  The registered email address of the user account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password.
+</ParamField>
+
+<ParamField body="latitude" type="string" required>
+  Device latitude coordinate for login audit logging.
+</ParamField>
+
+<ParamField body="longitude" type="string" required>
+  Device longitude coordinate for login audit logging.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/login" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "email": "admin@example.com",
+    "password": "secret",
+    "latitude": "19.0760",
+    "longitude": "72.8777"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Super Admin Login",
+  "token": "1|xYzABC...",
+  "data": {
+    "id": 1,
+    "name": "Platform Admin",
+    "email": "admin@example.com",
+    "role": "super_admin",
+    "tenant_id": null,
+    "company_name": null,
+    "active": "active",
+    "created_at": "2024-01-15T10:00:00.000000Z"
+  }
+}
+```
+
+<ResponseField name="status" type="boolean">
+  `true` on a successful authentication.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable result message, e.g. `"Super Admin Login"`.
+</ResponseField>
+
+<ResponseField name="token" type="string">
+  The Bearer token. Pass this as `Authorization: Bearer {token}` in all subsequent requests. Expires after 24 hours.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The authenticated user object.
+
+  <Expandable title="data fields">
+    <ResponseField name="data.id" type="integer">
+      Unique user ID.
+    </ResponseField>
+    <ResponseField name="data.name" type="string">
+      Full display name of the user.
+    </ResponseField>
+    <ResponseField name="data.email" type="string">
+      Email address associated with the account.
+    </ResponseField>
+    <ResponseField name="data.role" type="string">
+      The user's role. One of: `super_admin`, `dsa_admin`, `coordinator`, `partner`, `staff`.
+    </ResponseField>
+    <ResponseField name="data.tenant_id" type="integer | null">
+      The tenant the user belongs to. `null` for `super_admin` accounts.
+    </ResponseField>
+    <ResponseField name="data.active" type="string">
+      Account status — `active` or `inactive`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="401 — Invalid Credentials">
+    ```json
+    {
+      "status": false,
+      "message": "Invalid credentials"
+    }
+    ```
+  </Tab>
+  <Tab title="401 — Validation Error">
+    ```json
+    {
+      "status": false,
+      "message": "The email field is required.",
+      "data": []
+    }
+    ```
+    Returned when `email`, `password`, `latitude`, or `longitude` are missing or malformed.
+  </Tab>
+</Tabs>
+
+<Warning>
+  The `latitude` and `longitude` fields are required for login audit logging. Requests that omit them are rejected with a `401` error.
+</Warning>
+
+---
+
+## POST /api/tenant-login
+
+Authenticate a DSA tenant user (e.g. `dsa_admin`, `coordinator`, `partner`, or `staff`). This endpoint explicitly **blocks** `super_admin` accounts — if a `super_admin` attempts to log in here, the server returns a `403` error.
+
+**No authentication required** — this is a public endpoint.
+
+<Note>
+  Use this endpoint if your account is associated with a DSA partner organization. Standard `POST /api/login` will return an error for tenant users attempting to authenticate through the wrong endpoint.
+</Note>
+
+### Request Body
+
+<ParamField body="email" type="string" required>
+  The registered email address of the tenant user account.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/tenant-login" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "email": "dsa@partner.com",
+    "password": "secret"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Login Successfully",
+  "token": "2|aBcDEF...",
+  "data": {
+    "id": 42,
+    "name": "DSA Partner Admin",
+    "email": "dsa@partner.com",
+    "role": "dsa_admin",
+    "tenant_id": 7,
+    "active": "active",
+    "created_at": "2024-03-01T09:30:00.000000Z"
+  }
+}
+```
+
+<ResponseField name="status" type="boolean">
+  `true` on successful authentication.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Result message, e.g. `"Login Successfully"`.
+</ResponseField>
+
+<ResponseField name="token" type="string">
+  Bearer token valid for 24 hours.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The authenticated tenant user object. Fields are identical to the `/api/login` response — see the [field descriptions above](#success-response-200).
+</ResponseField>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="401 — Invalid Credentials">
+    ```json
+    {
+      "status": false,
+      "message": "Invalid credentials"
+    }
+    ```
+  </Tab>
+  <Tab title="403 — Super Admin Blocked">
+    ```json
+    {
+      "status": false,
+      "message": "Only tenant allowed"
+    }
+    ```
+    Returned when a `super_admin` account attempts to use this endpoint.
+  </Tab>
+  <Tab title="422 — Validation Error">
+    ```json
+    {
+      "status": false,
+      "message": "The email field is required.",
+      "data": []
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## GET /api/logout
+
+Invalidate the current user's Bearer token. The token is permanently deleted from the server — subsequent requests using it will receive a `401 Unauthenticated` error.
+
+**Authentication required** — `super_admin` role only.
+
+<Warning>
+  This endpoint is only available to `super_admin` users. Tenant users and DSA staff are not authorized to call this endpoint.
+</Warning>
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/logout" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Logged out successfully"
+}
+```
+
+<Tip>
+  After logging out, discard the token from your client immediately. To re-authenticate, call `POST /api/login` again to receive a new token.
+</Tip>

@@ -1,0 +1,438 @@
+---
+title: "GST Registration Verification and Filing API Endpoints"
+sidebarTitle: "GST"
+description: "Verify GST registration and retrieve GSTR-1 and GSTR-3B data by GSTIN or PAN, with OTP-based filing access for authenticated GST returns."
+---
+
+GST data verification lets lenders confirm an applicant's business registration, assess their taxable turnover, and validate the consistency of their income claims against GST filings. Clikzop Bank EMI fetches GST data from government databases, offering two lookup methods — by PAN (which returns all linked registrations) and by GSTIN (which returns the full profile and filing history). For accessing detailed GSTR-3B data, an OTP-based authentication flow via the applicant's GST username initiates a session. Once data is collected, you record the annual GST turnover against the loan using the running year endpoints.
+
+---
+
+## Retrieve GST Registrations by PAN
+
+<ParamField path="POST /api/get-gst-details-via-pan" type="endpoint" />
+
+Retrieve all GST registrations linked to a PAN number. This is useful at the beginning of the business loan workflow when you need to discover which GSTINs an applicant holds before fetching full filing details.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-gst-details-via-pan" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pan_no": "ABCDE1234F",
+    "customer_id": 42,
+    "company_id": 8
+  }'
+```
+
+### Parameters
+
+<ParamField body="pan_no" type="string" required>
+  The applicant's 10-character PAN number in uppercase (e.g., `ABCDE1234F`).
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer record to associate the GST details with.
+</ParamField>
+
+<ParamField body="company_id" type="integer" required>
+  The ID of the associated company record. Create a company first using `POST /api/get-company-details`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save Successfully",
+  "data": {
+    "masterData": {
+      "gst_in": "27ABCDE1234F1Z5",
+      "trade_name": "ABC ENTERPRISES",
+      "registration_name": "ABC ENTERPRISES PVT LTD",
+      "registration_date": "2018-07-01",
+      "status": "Active",
+      "state": "Maharashtra",
+      "address": "123, MG Road, Mumbai - 400001",
+      "pan": "ABCDE1234F",
+      "ctb": "Private Limited Company",
+      "dty": "Regular"
+    },
+    "fillingData": [
+      {
+        "arn": "AA2700100123456",
+        "return_type": "GSTR3B",
+        "return_period": "032024",
+        "status": "Filed",
+        "filed_date": "2024-04-20",
+        "due_date": "2024-04-20",
+        "is_delay": false,
+        "delay_days": 0
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Retrieve Full GST Profile by GSTIN
+
+<ParamField path="POST /api/get-gst-details-by-gstin" type="endpoint" />
+
+Retrieve the complete GST profile, registration details, and filing history for a specific GSTIN. This endpoint provides deeper filing data than the PAN-based lookup and is the preferred method when you know the exact GSTIN you want to assess.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-gst-details-by-gstin" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "gst_no": "27ABCDE1234F1Z5",
+    "customer_id": 42
+  }'
+```
+
+### Parameters
+
+<ParamField body="gst_no" type="string" required>
+  The 15-character GSTIN to look up (e.g., `27ABCDE1234F1Z5`).
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer record to associate the GST details with.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="status" type="boolean">
+  `true` on success.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="data.gst_in" type="string">
+      The verified GSTIN.
+    </ResponseField>
+    <ResponseField name="data.trade_name" type="string">
+      Trade name as registered with GST authorities.
+    </ResponseField>
+    <ResponseField name="data.registration_name" type="string">
+      Legal registration name.
+    </ResponseField>
+    <ResponseField name="data.registration_date" type="string">
+      GST registration date (`YYYY-MM-DD`).
+    </ResponseField>
+    <ResponseField name="data.status" type="string">
+      Registration status (e.g., `Active`, `Cancelled`, `Suspended`).
+    </ResponseField>
+    <ResponseField name="data.state" type="string">
+      State of registration.
+    </ResponseField>
+    <ResponseField name="data.address" type="string">
+      Registered business address.
+    </ResponseField>
+    <ResponseField name="data.pan" type="string">
+      PAN linked to this GSTIN.
+    </ResponseField>
+    <ResponseField name="data.ctb" type="string">
+      Constitution of business (e.g., `Private Limited Company`, `Proprietorship`).
+    </ResponseField>
+    <ResponseField name="data.dty" type="string">
+      Taxpayer type (e.g., `Regular`, `Composition`).
+    </ResponseField>
+    <ResponseField name="data.e_invoice_status" type="string">
+      E-invoice enablement status.
+    </ResponseField>
+    <ResponseField name="data.fillingData" type="array">
+      Array of GST return filing records. Each entry contains `arn`, `return_type` (GSTR1, GSTR3B, etc.), `return_period`, `status`, `filed_date`, `due_date`, `is_delay`, and `delay_days`.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "status": true,
+  "message": "Save Successfully",
+  "data": {
+    "gst_in": "27ABCDE1234F1Z5",
+    "trade_name": "ABC ENTERPRISES",
+    "registration_name": "ABC ENTERPRISES PVT LTD",
+    "registration_date": "2018-07-01",
+    "status": "Active",
+    "state": "Maharashtra",
+    "address": "123, MG Road, Mumbai - 400001",
+    "pan": "ABCDE1234F",
+    "ctb": "Private Limited Company",
+    "dty": "Regular",
+    "e_invoice_status": "Enabled",
+    "fillingData": [
+      {
+        "arn": "AA2700100123456",
+        "return_type": "GSTR3B",
+        "return_period": "032024",
+        "status": "Filed",
+        "filed_date": "2024-04-20",
+        "due_date": "2024-04-20",
+        "is_delay": false,
+        "delay_days": 0
+      },
+      {
+        "arn": "AA2700100123457",
+        "return_type": "GSTR1",
+        "return_period": "032024",
+        "status": "Filed",
+        "filed_date": "2024-04-11",
+        "due_date": "2024-04-11",
+        "is_delay": false,
+        "delay_days": 0
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Send OTP for GST Filing Access
+
+<ParamField path="POST /api/send-otp-for-gst-filling" type="endpoint" />
+
+Initiate an OTP to authenticate a GST session for accessing detailed GSTR-3B return data via the applicant's GST portal username. The OTP is sent to the mobile number registered with the applicant's GST account.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/send-otp-for-gst-filling" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "ABCDE1234F",
+    "gst": "27ABCDE1234F1Z5",
+    "customer_id": 42,
+    "loan_id": 1
+  }'
+```
+
+### Parameters
+
+<ParamField body="username" type="string" required>
+  The applicant's GST portal username (typically their PAN in uppercase).
+</ParamField>
+
+<ParamField body="gst" type="string" required>
+  The GSTIN for which to initiate the OTP session.
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer record.
+</ParamField>
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to associate this GST session with.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "OTP sent to registered mobile"
+}
+```
+
+---
+
+## Verify OTP and Fetch GST Filing Data
+
+<ParamField path="POST /api/verify-otp-for-gst-filling" type="endpoint" />
+
+Verify the OTP and authenticate the GST session. On successful verification, the platform fetches GSTR-3B data from government databases and creates a GST details record linking the GSTIN to the loan.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/verify-otp-for-gst-filling" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "otp": "123456",
+    "gst": "27ABCDE1234F1Z5",
+    "customer_id": 42,
+    "loan_id": 1,
+    "request_id": "REQ20240301ABC123"
+  }'
+```
+
+### Parameters
+
+<ParamField body="otp" type="string" required>
+  The 6-digit OTP received on the applicant's registered mobile.
+</ParamField>
+
+<ParamField body="gst" type="string" required>
+  The GSTIN being authenticated.
+</ParamField>
+
+<ParamField body="customer_id" type="integer" required>
+  The ID of the customer record.
+</ParamField>
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to associate the authenticated GST data with.
+</ParamField>
+
+<ParamField body="request_id" type="string" required>
+  The `request_id` returned by the OTP send step. Pass this back to correlate the OTP verification session.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": {
+    "gstr3b": [
+      {
+        "ret_period": "032024",
+        "ttl_tax_payable": 48000,
+        "ttl_itc_paid": 22000,
+        "ttl_cash_paid": 26000,
+        "opening_balance": 5000,
+        "closing_balance": 3000
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Save GST Running Year
+
+<ParamField path="POST /api/save-gst-running-year" type="endpoint" />
+
+Create a GST running year record for a loan. This initialises an annual GST turnover entry and auto-creates monthly detail rows (April through March) for recording monthly GST amounts. The `financial_year` is derived automatically from the `year` value (e.g., `2023` becomes `"2023-24"`).
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-gst-running-year" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "company": "ABC ENTERPRISES PVT LTD",
+    "year": 2023,
+    "location": "Mumbai"
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to attach this GST year record to.
+</ParamField>
+
+<ParamField body="company" type="string" required>
+  The name of the company associated with this GST filing year.
+</ParamField>
+
+<ParamField body="year" type="integer" required>
+  The starting calendar year of the financial year (e.g., `2023` for FY 2023-24).
+</ParamField>
+
+<ParamField body="location" type="string">
+  The company's operating location or registered address city.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": {
+    "id": 5,
+    "loan_id": 1,
+    "company": "ABC ENTERPRISES PVT LTD",
+    "year": 2023,
+    "financial_year": "2023-24",
+    "total_turnover": 0,
+    "average_turnover": 0
+  }
+}
+```
+
+---
+
+## Save Monthly GST Amount
+
+<ParamField path="POST /api/save-gst-running-year-amount" type="endpoint" />
+
+Record the GST taxable amount for a specific month within a GST running year. After saving each monthly amount, the platform automatically recalculates `total_turnover` (sum of all months) and `average_turnover` (total divided by 7) on the parent running year record.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-gst-running-year-amount" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 44,
+    "amount": 185000
+  }'
+```
+
+### Parameters
+
+<ParamField body="id" type="integer" required>
+  The ID of the monthly GST detail row to update.
+</ParamField>
+
+<ParamField body="amount" type="number" required>
+  The GST taxable amount for the month.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+---
+
+## GSTR-3B Fields Reference
+
+The following fields are captured from GSTR-3B records and stored per return period:
+
+| Field | Description |
+|---|---|
+| `ret_period` | Return period in `MMYYYY` format (e.g., `032024` for March 2024) |
+| `ttl_tax_payable` | Total tax payable for the period |
+| `ttl_tax_paid` | Total tax actually paid |
+| `ttl_itc_paid` | Total Input Tax Credit (ITC) utilised |
+| `ttl_cash_paid` | Tax paid in cash (after ITC offset) |
+| `ttl_late_fee` | Late fee charged for the period |
+| `ttl_interest` | Interest charged for delayed filing or payment |
+| `opening_balance` | Opening ITC credit balance |
+| `closing_balance` | Closing ITC credit balance |
+| `itc_avl_by_gstr2a` | ITC available as per GSTR-2A auto-population |
+| `supply_details` | Outward supply breakdowns including `txval`, `iamt`, `camt`, `samt`, and `csamt` by supply type |
+| `itc_details` | Input tax credit breakdowns segmented by section and type |

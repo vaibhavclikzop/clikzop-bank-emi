@@ -1,0 +1,483 @@
+---
+title: "Customer Identity and Document Verification Endpoints"
+sidebarTitle: "Documents"
+description: "Verify PAN, Aadhaar, Driving License, Passport, company CIN, and GST details against government databases using the Clikzop verification API."
+---
+
+Document verification confirms a customer's identity against authoritative government databases in real time. Each endpoint accepts the relevant document number, validates it externally, and persists the verified result against the customer's profile. Verified documents contribute to the customer's KYC status and unlock subsequent credit assessment steps. Use the quick-reference table below to find the right endpoint for each document type, then follow the per-endpoint details for exact request fields.
+
+<Note>
+  All verification endpoints require a valid `Authorization: Bearer {token}` header and the `customer_id` of the person being verified. Document numbers are stored encrypted; only the last 4 characters are retained in plaintext.
+</Note>
+
+---
+
+## Endpoint quick reference
+
+| Endpoint | Document | Key Required Fields |
+|---|---|---|
+| `POST /api/check-pan-card` | PAN Card | `pan_card_no`, `customer_id`, `document_id`, `id` |
+| `POST /api/check-aadhar-card` | Aadhaar | `aadhar_card_no`, `customer_id`, `document_id`, `id`, `lat`, `long` |
+| `POST /api/check-driving-license` | Driving License | `driving_license_no`, `dob`, `customer_id`, `document_id`, `id` |
+| `POST /api/check-passport` | Passport | `file_no`, `dob`, `customer_id`, `document_id`, `id` |
+| `POST /api/get-company-details` | Company (CIN) | `cin_no`, `customer_id` |
+| `POST /api/check-background-verification` | Court / BGV | `name`, `dob`, `customer_id` |
+
+---
+
+## Verify PAN card
+
+Confirm a customer's PAN number against the income-tax database and mark the document as verified on their profile.
+
+**POST** `/api/check-pan-card`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="pan_card_no" type="string" required>
+      10-character PAN in the format `ABCDE1234F`.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer being verified.
+    </ParamField>
+
+    <ParamField body="document_id" type="integer" required>
+      ID of the document type (PAN) from the customer documents master.
+    </ParamField>
+
+    <ParamField body="id" type="integer" required>
+      ID of the customer document record to update upon successful verification. This is the `id` returned in the customer's document list.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-pan-card" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "pan_card_no": "ABCDE1234F",
+        "customer_id": 42,
+        "document_id": 2,
+        "id": 17
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 17,
+        "document_name": "PAN Card",
+        "document_no_last4": "234F",
+        "is_verified": true,
+        "verified_at": "2024-05-01T10:35:00.000000Z",
+        "state": "Maharashtra",
+        "city": "Mumbai",
+        "pincode": "400001"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Verify Aadhaar card
+
+Verify a customer's 12-digit Aadhaar number against the UIDAI database. This endpoint captures geolocation at the point of consent.
+
+**POST** `/api/check-aadhar-card`
+
+<Note>
+  Aadhaar verification uses a consent-based flow. The customer must explicitly authorize sharing their Aadhaar data before you call this endpoint. Capture and log their consent in your application.
+</Note>
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="aadhar_card_no" type="string" required>
+      12-digit Aadhaar number. Stored encrypted; only the last 4 digits are retained.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer.
+    </ParamField>
+
+    <ParamField body="document_id" type="integer" required>
+      Document type ID for Aadhaar from the master list.
+    </ParamField>
+
+    <ParamField body="id" type="integer" required>
+      ID of the customer document record to update. Use the `id` returned in the customer's document list.
+    </ParamField>
+
+    <ParamField body="lat" type="string" required>
+      Latitude of the device at time of consent (e.g., `19.0760`).
+    </ParamField>
+
+    <ParamField body="long" type="string" required>
+      Longitude of the device at time of consent (e.g., `72.8777`).
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-aadhar-card" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "aadhar_card_no": "123456789012",
+        "customer_id": 42,
+        "document_id": 1,
+        "id": 18,
+        "lat": "19.0760",
+        "long": "72.8777"
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 18,
+        "document_name": "Aadhaar Card",
+        "document_no_last4": "9012",
+        "is_verified": true,
+        "verified_at": "2024-05-01T10:40:00.000000Z",
+        "address": "123, MG Road, Andheri West",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "pincode": "400058"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Verify driving license
+
+Validate a driving license number against the Sarathi database. You must also supply the holder's date of birth for the lookup.
+
+**POST** `/api/check-driving-license`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="driving_license_no" type="string" required>
+      Driving license number (e.g., `MH1220210012345`).
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth of the license holder in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer.
+    </ParamField>
+
+    <ParamField body="document_id" type="integer" required>
+      Document type ID for Driving License.
+    </ParamField>
+
+    <ParamField body="id" type="integer" required>
+      ID of the customer document record to update. Use the `id` returned in the customer's document list.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-driving-license" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "driving_license_no": "MH1220210012345",
+        "dob": "1990-04-15",
+        "customer_id": 42,
+        "document_id": 3,
+        "id": 19
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 19,
+        "document_name": "Driving License",
+        "document_no_last4": "2345",
+        "is_verified": true,
+        "verified_at": "2024-05-01T10:45:00.000000Z",
+        "state": "Maharashtra",
+        "city": "Mumbai"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Verify passport
+
+Verify a passport using the file number and date of birth against the Passport Seva database.
+
+**POST** `/api/check-passport`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="file_no" type="string" required>
+      Passport file number (found on the first page of the passport booklet).
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer.
+    </ParamField>
+
+    <ParamField body="document_id" type="integer" required>
+      Document type ID for Passport.
+    </ParamField>
+
+    <ParamField body="id" type="integer" required>
+      ID of the customer document record to update. Use the `id` returned in the customer's document list.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-passport" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "file_no": "MU1234567",
+        "dob": "1990-04-15",
+        "customer_id": 42,
+        "document_id": 4,
+        "id": 20
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 20,
+        "document_name": "Passport",
+        "document_no_last4": "4567",
+        "is_verified": true,
+        "verified_at": "2024-05-01T10:50:00.000000Z",
+        "country": "IN",
+        "state": "Maharashtra"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Retrieve company details via CIN
+
+Fetch company registration details and director information from the MCA database using a Corporate Identification Number (CIN). Results are persisted against the customer record.
+
+**POST** `/api/get-company-details`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="cin_no" type="string" required>
+      21-character Corporate Identification Number (e.g., `U12345MH2010PLC123456`). Must be unique per customer — re-submitting an existing CIN returns a validation error.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer (business proprietor or director).
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/get-company-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "cin_no": "U12345MH2010PLC123456",
+        "customer_id": 42
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "result": {
+          "company": {
+            "cin": "U12345MH2010PLC123456",
+            "entityName": "Acme Technologies Pvt Ltd",
+            "status": "Active",
+            "registrationNumber": "123456",
+            "dateOfIncorporation": "15-03-2010",
+            "registeredAddress": "5th Floor, Tower B, BKC, Mumbai – 400051",
+            "authorisedCapital": "10000000",
+            "paidUpCapital": "5000000"
+          },
+          "directors": [
+            {
+              "din": "01234567",
+              "name": "Priya Sharma",
+              "designation": "Director",
+              "dob": "15-04-1990",
+              "tenureBeginDate": "15-03-2010"
+            }
+          ]
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Retrieve GST details
+
+For business customers, retrieve GST registration details and filing history. Two methods are available depending on what identifier you have.
+
+<CardGroup cols={2}>
+  <Card title="Via PAN" icon="id-card">
+    **POST** `/api/get-gst-details-via-pan`
+
+    Retrieves all GSTIN registrations linked to a PAN number, along with return filing history.
+
+    **Required fields:** `pan_no`, `customer_id`, `company_id`
+  </Card>
+  <Card title="Via GSTIN" icon="building">
+    **POST** `/api/get-gst-details-by-gstin`
+
+    Retrieves registration master data and filing history for a specific GSTIN.
+
+    **Required fields:** `gst_no`, `customer_id`
+  </Card>
+</CardGroup>
+
+<Tip>
+  See the [ITR & GST Verification guide](/guides/itr-gst-verification) for full request/response details and filing history field descriptions.
+</Tip>
+
+---
+
+## Initiate background verification
+
+Run a court records and background check on a customer by name and date of birth. The response captures case counts across district, high, consumer, supreme, and tribunal courts.
+
+**POST** `/api/check-background-verification`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="name" type="string" required>
+      Full name of the customer as it appears on identity documents.
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the customer.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-background-verification" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "name": "Priya Sharma",
+        "dob": "1990-04-15",
+        "customer_id": 42
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 8,
+        "customer_id": 42,
+        "total_cases": 0,
+        "pending_cases": 0,
+        "disposed_cases": 0,
+        "civil_cases": 0,
+        "criminal_cases": 0,
+        "severity_total": 0,
+        "severity_high": 0,
+        "severity_medium": 0,
+        "severity_low": 0,
+        "district_courts": 0,
+        "high_courts": 0,
+        "consumer_courts": 0,
+        "supreme_courts": 0,
+        "tribunal_courts": 0,
+        "confidence_level": "HIGH",
+        "is_verified": false
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Update background verification result
+
+Mark a background check as reviewed and update its verification status after your team has assessed the results.
+
+**POST** `/api/update-background-verification`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="id" type="integer" required>
+      ID of the background check record returned by `/api/check-background-verification`.
+    </ParamField>
+
+    <ParamField body="is_verified" type="integer" required>
+      Set to `1` to mark the background check as reviewed and cleared, `0` to reset.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/update-background-verification" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "id": 8,
+        "is_verified": 1
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Update Successfully",
+      "data": []
+    }
+    ```
+  </Tab>
+</Tabs>

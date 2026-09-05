@@ -1,0 +1,186 @@
+---
+title: "Create a New Loan Application Using the Clikzop API"
+sidebarTitle: "Create Loan"
+description: "POST /api/save-loan — create a new loan application linked to a customer with loan type, amount, and tenure. Returns a unique loan number."
+---
+
+Every loan origination journey begins with a `POST /api/save-loan` call. This endpoint creates the loan record, assigns it a human-readable loan number, sets the initial status, builds the document checklist, and links the primary applicant — all in one atomic transaction. Before calling this endpoint, ensure the customer record already exists; if it does not, create one first using [`POST /api/save-customer`](/api-reference/customers/create).
+
+<Note>
+  You need the `create_loan` permission on your role to call `/api/save-loan`. Contact your administrator if you receive a `403 Forbidden` response.
+</Note>
+
+---
+
+## Create a loan application
+
+**POST** `/api/save-loan`
+
+<Steps>
+  <Step title="Gather prerequisites">
+    You need three IDs before submitting:
+    - **customer_id** — from `POST /api/save-customer` or `GET /api/get-customers`
+    - **loan_type_id** — from `GET /api/get-loan-type`
+    - **income_type_id** — the income category that determines the document checklist
+  </Step>
+  <Step title="Submit the loan application">
+    Send a `POST` request with the required fields. The platform creates the loan, generates a loan number, and auto-populates the document checklist.
+  </Step>
+  <Step title="Use the returned ID for all subsequent calls">
+    Store both `data.id` (internal loan ID for API calls) and `data.loan_number` (human-readable reference for communications).
+  </Step>
+</Steps>
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the primary loan applicant. The customer must already exist.
+    </ParamField>
+
+    <ParamField body="loan_type_id" type="integer" required>
+      ID of the loan product. Retrieve available types from `GET /api/get-loan-type`.
+    </ParamField>
+
+    <ParamField body="loan_amount" type="number" required>
+      Requested loan amount in INR (e.g., `500000`).
+    </ParamField>
+
+    <ParamField body="tenure" type="integer" required>
+      Loan tenure in months (e.g., `36` for 3 years).
+    </ParamField>
+
+    <ParamField body="income_type_id" type="integer" required>
+      Income category ID. Controls which document checklist is generated for this loan. Retrieve options from `GET /api/get-income-type`.
+    </ParamField>
+
+    <ParamField body="loan_purpose" type="string">
+      A short description of what the loan will be used for.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/save-loan" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_type_id": 2,
+        "loan_amount": 500000,
+        "tenure": 36,
+        "income_type_id": 1,
+        "loan_purpose": "Business expansion"
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="201 Created"
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {
+        "id": 7,
+        "loan_number": "LN-5F3A2C001",
+        "customer_id": 42,
+        "loan_type_id": 2,
+        "income_type_id": 1,
+        "loan_amount": "500000.00",
+        "tenure_months": 36,
+        "loan_purpose": "Business expansion",
+        "status_id": 1,
+        "kyc_verified": null,
+        "created_at": "2024-05-01T10:30:00.000000Z",
+        "updated_at": "2024-05-01T10:30:00.000000Z"
+      }
+    }
+    ```
+
+    <Expandable title="Response fields">
+      <ResponseField name="data.id" type="integer">
+        Internal loan ID. Use this value in all subsequent API calls (upload documents, add co-applicants, fetch CIBIL, etc.).
+      </ResponseField>
+      <ResponseField name="data.loan_number" type="string">
+        Auto-generated, human-readable loan reference (e.g., `LN-5F3A2C001`). Use this in customer communications and your CRM.
+      </ResponseField>
+      <ResponseField name="data.customer_id" type="integer">
+        ID of the primary applicant linked to this loan.
+      </ResponseField>
+      <ResponseField name="data.loan_type_id" type="integer">
+        Loan product type ID as submitted.
+      </ResponseField>
+      <ResponseField name="data.loan_amount" type="string">
+        Requested loan amount in INR.
+      </ResponseField>
+      <ResponseField name="data.tenure_months" type="integer">
+        Loan tenure in months.
+      </ResponseField>
+      <ResponseField name="data.status_id" type="integer">
+        Initial status ID. Always `1` (Application Initiated) on creation.
+      </ResponseField>
+    </Expandable>
+  </Tab>
+</Tabs>
+
+<Note>
+  The `loan_number` is the human-readable reference for the loan (e.g., `LN-5F3A2C001`). Always use `data.id` — the internal integer — for all subsequent API calls such as document uploads, co-applicant additions, and CIBIL lookups.
+</Note>
+
+<Warning>
+  You need the `create_loan` permission on your role to use this endpoint. Contact your administrator if you get a `403` error.
+</Warning>
+
+---
+
+## Get available loan types
+
+Retrieve the list of loan products configured for your tenant. Use the `id` from this response as `loan_type_id` when creating a loan.
+
+**GET** `/api/get-loan-type`
+
+```bash title="cURL"
+curl -X GET "https://your-domain.com/api/get-loan-type" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+```json title="200 OK"
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    {"id": 1, "name": "Home Loan"},
+    {"id": 2, "name": "Business Loan"},
+    {"id": 3, "name": "Personal Loan"},
+    {"id": 4, "name": "Loan Against Property"}
+  ]
+}
+```
+
+---
+
+## Get loan statuses
+
+Retrieve all configured loan statuses and their step order. Use the `id` from this response to filter loans by status in `GET /api/get-loan`.
+
+**GET** `/api/get-status`
+
+```bash title="cURL"
+curl -X GET "https://your-domain.com/api/get-status" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+```json title="200 OK"
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    {"id": 1, "name": "Application Initiated"},
+    {"id": 2, "name": "Document Collection"},
+    {"id": 3, "name": "Credit Assessment"},
+    {"id": 4, "name": "Sanctioned"},
+    {"id": 5, "name": "Disbursed"},
+    {"id": 6, "name": "Rejected"}
+  ]
+}
+```

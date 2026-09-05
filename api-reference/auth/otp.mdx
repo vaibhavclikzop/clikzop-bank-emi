@@ -1,0 +1,214 @@
+---
+title: "Clikzop Bank EMI OTP Send and Verify API Reference"
+sidebarTitle: "OTP"
+description: "POST /api/send-otp and POST /api/verify-otp — send a one-time password to a mobile number and verify it for secure customer flows."
+---
+
+OTP (one-time password) verification is a required step in several customer-facing workflows — including customer registration, mobile number verification, and password recovery. Clikzop Bank EMI sends all OTPs to Indian mobile numbers (numbers starting with digits 6–9). The flow is always two-step: first call `POST /api/send-otp` to dispatch an OTP and receive a `verification_id`, then pass that `verification_id` along with the received OTP to `POST /api/verify-otp` to confirm it. Both endpoints require a valid Bearer token.
+
+---
+
+## POST /api/send-otp
+
+Send a 6-digit OTP to the specified Indian mobile number. The server creates a verification record, hashes the OTP for secure storage, and returns a `verification_id` UUID you must use in the subsequent verify call. Any previous unverified OTPs for the same mobile and purpose are automatically invalidated.
+
+**Authentication required** — Bearer token.
+
+### Request Body
+
+<ParamField body="mobile" type="string" required>
+  The 10-digit Indian mobile number to send the OTP to. Must start with a digit between 6 and 9 (e.g. `9876543210`). Do not include the country code prefix.
+</ParamField>
+
+<ParamField body="purpose" type="string" required>
+  The context in which the OTP is being sent. Must be one of:
+
+  | Value | Description |
+  |---|---|
+  | `login` | OTP-based login flow |
+  | `register` | New customer registration |
+  | `forgot_password` | Password recovery |
+  | `verify_mobile` | Mobile number verification |
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/send-otp" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "mobile": "9876543210",
+    "purpose": "register"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "OTP sent successfully.",
+  "data": {
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "expires_at": "2024-06-01T10:05:00.000000Z"
+  }
+}
+```
+
+<ResponseField name="status" type="boolean">
+  `true` when the OTP was dispatched successfully.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Confirmation message — `"OTP sent successfully."`.
+</ResponseField>
+
+<ResponseField name="data.verification_id" type="string">
+  A UUID that uniquely identifies this OTP session. Store this value — you must pass it to `POST /api/verify-otp` to complete verification.
+</ResponseField>
+
+<ResponseField name="data.expires_at" type="string">
+  ISO 8601 timestamp indicating when the OTP expires. OTPs are valid for 5 minutes by default.
+</ResponseField>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="422 — Validation Error">
+    ```json
+    {
+      "status": false,
+      "message": "Validation failed.",
+      "errors": {
+        "mobile": ["Please enter a valid Indian mobile number."],
+        "purpose": ["Invalid OTP purpose."]
+      }
+    }
+    ```
+    Returned when `mobile` does not match the pattern `^[6-9][0-9]{9}$`, or `purpose` is not one of the four allowed values.
+  </Tab>
+  <Tab title="401 — Unauthenticated">
+    ```json
+    {
+      "message": "Unauthenticated."
+    }
+    ```
+    Returned when no valid Bearer token is provided.
+  </Tab>
+</Tabs>
+
+---
+
+## POST /api/verify-otp
+
+Verify the OTP entered by the user. Submit the `verification_id` returned by `POST /api/send-otp` along with the 6-digit code received on the mobile device. On success, the verification record is stamped with a `verified_at` timestamp and cannot be used again.
+
+**Authentication required** — Bearer token.
+
+<Note>
+  OTPs expire after the window shown in `expires_at`. If the OTP has expired, call `POST /api/send-otp` again to receive a new `verification_id` and OTP — do not re-use the old `verification_id`.
+</Note>
+
+### Request Body
+
+<ParamField body="verification_id" type="string" required>
+  The UUID returned by `POST /api/send-otp`. Identifies the active OTP session.
+</ParamField>
+
+<ParamField body="otp" type="string" required>
+  The 6-digit OTP received via SMS on the registered mobile number. Must be exactly 6 digits.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/verify-otp" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "otp": "123456"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "OTP verified successfully.",
+  "data": {
+    "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+    "verified": true,
+    "verified_at": "2024-06-01T10:03:22.000000Z"
+  }
+}
+```
+
+<ResponseField name="status" type="boolean">
+  `true` when the OTP was verified successfully.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Result message — `"OTP verified successfully."`.
+</ResponseField>
+
+<ResponseField name="data.verification_id" type="string">
+  The UUID of the verified session, echoed back for client-side confirmation.
+</ResponseField>
+
+<ResponseField name="data.verified" type="boolean">
+  Always `true` on a successful verification response.
+</ResponseField>
+
+<ResponseField name="data.verified_at" type="string">
+  ISO 8601 timestamp of when the verification was completed.
+</ResponseField>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="422 — Invalid Format">
+    ```json
+    {
+      "status": false,
+      "message": "The otp field must be 6 digits.",
+      "data": []
+    }
+    ```
+    Returned when `verification_id` is not a valid UUID or `otp` is not exactly 6 digits.
+  </Tab>
+  <Tab title="422 — Wrong or Expired OTP">
+    ```json
+    {
+      "status": false,
+      "message": "Invalid OTP.",
+      "data": []
+    }
+    ```
+    Returned when the OTP does not match, has already been verified, or has expired.
+  </Tab>
+  <Tab title="422 — Max Attempts Exceeded">
+    ```json
+    {
+      "status": false,
+      "message": "Maximum OTP attempts exceeded.",
+      "data": []
+    }
+    ```
+    Returned after too many failed attempts against the same `verification_id`.
+  </Tab>
+</Tabs>
+
+<Accordion title="How many OTP attempts are allowed?">
+  Each `verification_id` allows a maximum of **5 verification attempts**. The attempt counter increments on every call to `POST /api/verify-otp`, regardless of whether the OTP is correct or not.
+
+  Once the maximum is reached, the OTP session is locked and all further attempts return a `422` error with the message `"Maximum OTP attempts exceeded."`. At that point, call `POST /api/send-otp` again to receive a fresh `verification_id` and a new OTP.
+</Accordion>
+
+<Tip>
+  Build your UI to surface the `expires_at` timestamp to end users so they know how much time they have before needing to request a new OTP.
+</Tip>

@@ -1,0 +1,471 @@
+---
+title: "Clikzop Bank EMI User and Role Management API Docs"
+sidebarTitle: "Users"
+description: "Manage team members, assign roles and permissions, and retrieve organizational hierarchy using the Clikzop Bank EMI user management endpoints."
+---
+
+Use these endpoints to manage users within your organization, assign roles, and configure permission sets. All user management endpoints are scoped to the authenticated user's context — `super_admin` users operate across the platform, while tenant users operate within their DSA organization. The platform supports five built-in roles: `super_admin`, `dsa_admin`, `coordinator`, `partner`, and `staff`. Granular access to loan and customer features is controlled through named permissions that you assign to roles.
+
+---
+
+## GET /api/get-users
+
+Retrieve a list of all users visible to the authenticated user. Results are automatically scoped to the tenant for DSA users, or platform-wide for `super_admin`.
+
+**Authentication required** — Bearer token.
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/get-users" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    {
+      "id": 2,
+      "name": "Priya Coordinator",
+      "email": "priya@partner.com",
+      "role": "coordinator",
+      "tenant_id": 7,
+      "active": "active"
+    },
+    {
+      "id": 3,
+      "name": "Amit Staff",
+      "email": "amit@partner.com",
+      "role": "staff",
+      "tenant_id": 7,
+      "active": "active"
+    }
+  ]
+}
+```
+
+<ResponseField name="data" type="array">
+  Array of user objects. Each object contains `id`, `name`, `email`, `role`, `tenant_id`, and `active`.
+</ResponseField>
+
+---
+
+## POST /api/save-user
+
+Create a new user or update an existing one. Pass an `id` field in the request body to update an existing record — omit it to create a new user. When creating, the `email` must be unique across all users. The `role` value must match a name in the `GET /api/get-roles` list.
+
+**Authentication required** — Bearer token. Requires `create_user` permission.
+
+### Request Body
+
+<ParamField body="id" type="integer">
+  Include this field to update an existing user. Omit it when creating a new user.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  Full name of the user.
+</ParamField>
+
+<ParamField body="email" type="string" required>
+  Email address. Must be unique when creating a new user.
+</ParamField>
+
+<ParamField body="password" type="string">
+  Account password. Required when updating an existing user (pass an `id`). Not validated as required when creating — include it to set the initial password for a new account.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  Role name to assign to the user. Must be an existing role — one of `dsa_admin`, `coordinator`, `partner`, `staff` (or `super_admin` for platform-level users).
+</ParamField>
+
+<ParamField body="parent_id" type="integer">
+  ID of this user's manager/parent in the organizational hierarchy.
+</ParamField>
+
+<ParamField body="state" type="string">
+  State component of the user's address.
+</ParamField>
+
+<ParamField body="district" type="string">
+  District component of the user's address.
+</ParamField>
+
+<ParamField body="city" type="string">
+  City component of the user's address.
+</ParamField>
+
+<ParamField body="address" type="string">
+  Street-level address.
+</ParamField>
+
+<ParamField body="pincode" type="string">
+  6-digit postal PIN code.
+</ParamField>
+
+<ParamField body="active" type="string">
+  Account status. One of `active` or `inactive`.
+</ParamField>
+
+### Example Request — Create User
+
+```bash
+curl -X POST "https://your-domain.com/api/save-user" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "name": "Neha Coordinator",
+    "email": "neha@partner.com",
+    "password": "SecurePass@123",
+    "role": "coordinator",
+    "parent_id": 2,
+    "state": "Maharashtra",
+    "city": "Pune",
+    "pincode": "411001"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Save Successfully",
+  "data": {
+    "id": 15,
+    "name": "Neha Coordinator",
+    "email": "neha@partner.com",
+    "role": "coordinator",
+    "tenant_id": null,
+    "active": "active",
+    "created_at": "2024-06-01T12:00:00.000000Z"
+  }
+}
+```
+
+---
+
+## GET /api/get-roles
+
+Retrieve all available roles along with their associated permissions. Results are scoped for tenant users — `super_admin` is excluded from tenant-context responses.
+
+**Authentication required** — Bearer token.
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/get-roles" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    {
+      "id": 1,
+      "name": "super_admin",
+      "tenant_id": null,
+      "permissions": []
+    },
+    {
+      "id": 2,
+      "name": "dsa_admin",
+      "tenant_id": null,
+      "permissions": [
+        { "id": 4, "name": "create_loan" },
+        { "id": 5, "name": "view_loan" }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "coordinator",
+      "tenant_id": null,
+      "permissions": []
+    }
+  ]
+}
+```
+
+---
+
+## POST /api/get-role-base-manager
+
+Retrieve users who are eligible managers for a given role, based on the organizational hierarchy. The result set varies depending on whether the caller is a `super_admin` (platform hierarchy) or a tenant user (DSA hierarchy).
+
+**Authentication required** — Bearer token.
+
+### Request Body
+
+<ParamField body="role" type="string" required>
+  The role name for which to find eligible managers. For example, passing `"coordinator"` returns users in manager roles that oversee coordinators.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-role-base-manager" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"role": "coordinator"}'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    {
+      "id": 5,
+      "name": "DSA Admin User",
+      "email": "dsa@partner.com",
+      "role": "dsa_admin",
+      "tenant_id": 7
+    }
+  ]
+}
+```
+
+<Info>
+  The hierarchy mapping is: for a `super_admin` context, `coordinator` managers are `super_admin` users and `staff` managers are `super_admin` or `coordinator`. For a tenant context, `coordinator` managers are `dsa_admin` users and `staff` managers are `coordinator` users.
+</Info>
+
+---
+
+## GET /api/get-all-permissions
+
+Retrieve the complete list of named permissions available on the platform. Use these IDs when assigning permissions to roles via `POST /api/save-role-permission`.
+
+**Authentication required** — Bearer token.
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/get-all-permissions" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    { "id": 1, "name": "create_customer" },
+    { "id": 2, "name": "view_customer" },
+    { "id": 3, "name": "update_customer" },
+    { "id": 4, "name": "create_loan" },
+    { "id": 5, "name": "view_loan" },
+    { "id": 6, "name": "edit_loan" },
+    { "id": 7, "name": "delete_loan" },
+    { "id": 8, "name": "view_company_profile" },
+    { "id": 9, "name": "update_company_profile" },
+    { "id": 10, "name": "create_user" },
+    { "id": 11, "name": "view_user" }
+  ]
+}
+```
+
+<ResponseField name="data" type="array">
+  Array of permission objects, each with an `id` (integer) and `name` (string).
+</ResponseField>
+
+---
+
+## GET /api/get-company-hierarchy
+
+Retrieve the organizational hierarchy tree for your tenant or platform. Each entry maps a user to their parent/manager in the hierarchy chain, enabling you to visualize the reporting structure.
+
+**Authentication required** — Bearer token.
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/get-company-hierarchy" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    [
+      { "name": "Platform Admin", "role": "super_admin" },
+      "Platform Admin",
+      ""
+    ],
+    [
+      { "name": "Priya Coordinator", "role": "coordinator" },
+      "DSA Admin",
+      ""
+    ]
+  ]
+}
+```
+
+---
+
+## POST /api/save-role-permission
+
+Assign a set of permissions to one or more roles. This completely replaces the existing permission set for each specified role (sync operation) — permissions not included in the request are removed.
+
+**Authentication required** — Bearer token.
+
+<Note>
+  Only `super_admin` and authorized tenant admins can modify role permissions. Roles and permission IDs must already exist — use `GET /api/get-roles` and `GET /api/get-all-permissions` to retrieve valid IDs.
+</Note>
+
+### Request Body
+
+<ParamField body="roles" type="array" required>
+  An array of role-permission mapping objects. Each object must contain `role_id` and `permission_ids`.
+
+  <Expandable title="roles[] object fields">
+    <ParamField body="roles[].role_id" type="integer" required>
+      ID of the role to assign permissions to. Must exist in the `roles` table.
+    </ParamField>
+    <ParamField body="roles[].permission_ids" type="array" required>
+      Array of permission IDs to assign to the role. Must be valid IDs from `GET /api/get-all-permissions`.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-role-permission" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "roles": [
+      {
+        "role_id": 2,
+        "permission_ids": [1, 2, 4, 5, 8]
+      },
+      {
+        "role_id": 3,
+        "permission_ids": [2, 5]
+      }
+    ]
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": 200,
+  "message": "Role permissions saved successfully",
+  "data": []
+}
+```
+
+### Error Responses
+
+<Tabs>
+  <Tab title="Validation Error">
+    ```json
+    {
+      "status": 401,
+      "message": "The roles field is required.",
+      "data": []
+    }
+    ```
+    Returned when the `roles` array is missing, a `role_id` does not exist, or a `permission_id` does not exist. The HTTP response code is `200`; inspect the `status` field in the body to detect this error.
+  </Tab>
+</Tabs>
+
+---
+
+## GET /api/get-state-district/\{district?\}
+
+Retrieve a list of Indian states, or the districts within a specific state. Use this endpoint to populate address dropdowns in your UI when creating or updating user and customer records.
+
+**Authentication required** — Bearer token.
+
+### Path Parameters
+
+<ParamField path="district" type="string">
+  Optional. When provided, returns all districts within the specified state name. When omitted, returns a distinct list of all states.
+</ParamField>
+
+### Example Requests
+
+<Tabs>
+  <Tab title="Get All States">
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-state-district" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Get Districts for a State">
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-state-district/Maharashtra" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+</Tabs>
+
+### Success Response — All States
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    "Andhra Pradesh",
+    "Assam",
+    "Bihar",
+    "Goa",
+    "Gujarat",
+    "Karnataka",
+    "Maharashtra",
+    "Rajasthan",
+    "Tamil Nadu",
+    "Uttar Pradesh"
+  ]
+}
+```
+
+### Success Response — Districts for a State
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    "Ahmednagar",
+    "Aurangabad",
+    "Mumbai",
+    "Nagpur",
+    "Nashik",
+    "Pune",
+    "Solapur"
+  ]
+}
+```
+
+<Tip>
+  Call this endpoint without a path parameter first to populate your state dropdown, then call it again with the selected state name to load the corresponding district options.
+</Tip>

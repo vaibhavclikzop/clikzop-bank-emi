@@ -1,0 +1,157 @@
+---
+title: "Fetch and Analyze CIBIL Credit Reports in Clikzop EMI"
+sidebarTitle: "CIBIL Report"
+description: "Learn how to retrieve a customer's CIBIL credit score, upload a PDF report for text extraction, and store the structured data against a loan application."
+---
+
+Clikzop Bank EMI retrieves CIBIL credit data in two ways: a live API fetch that pulls the customer's full credit bureau report and automatically parses accounts and enquiries, and a PDF upload path where the platform extracts structured data from a CIBIL report PDF using text parsing. Both methods store the result at the loan level, so the same customer can have independent credit snapshots across different loan applications.
+
+## Method 1: Fetch CIBIL Score via API
+
+Send the loan ID to trigger a live CIBIL lookup. The platform resolves the customer's PAN, mobile, and name from the loan record automatically — you do not need to pass them separately.
+
+```bash
+curl -X POST "https://your-domain.com/api/get-cibil-data" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{"loan_id": 7}'
+```
+
+The platform calls the credit bureau service, parses the credit report response, and stores:
+
+- The numeric CIBIL score (`cibil_score`)
+- All active and closed credit accounts
+- All recent credit enquiries
+- Aggregate obligation amount (sum of active EMIs)
+
+**Response:**
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": {
+    "currentCredit": 850000,
+    "creditUsed": 320000,
+    "cibil_score": 742,
+    "obligate_amount": 15000,
+    "reportUrl": "https://reports.cibil.com/report/abc123",
+    "OldestCreditAccountPeriod": "60 months",
+    "OnTimePaymentHistory": "94%",
+    "CreditCardUtilization": "37%",
+    "accounts": [
+      {
+        "member_name": "HDFC Bank",
+        "account_number": "XXXX6789",
+        "sanctioned_amount": 500000,
+        "current_balance": 320000,
+        "emi_amount": 15000,
+        "repayment_tenure": 36,
+        "account_status": "open"
+      }
+    ],
+    "enquiries": [
+      {
+        "member_name": "Axis Bank",
+        "date": "2024-03-10",
+        "purpose": "500000"
+      }
+    ]
+  }
+}
+```
+
+## Method 2: Upload CIBIL PDF
+
+If a live API fetch is not available or the customer provides a downloaded report, upload the PDF directly. The platform uses PDF text extraction to parse the raw CIBIL report and stores the extracted text against the loan for further processing.
+
+```bash
+curl -X POST "https://your-domain.com/api/upload-cibil-pdf" \
+  -H "Authorization: Bearer {your_token}" \
+  -F "loan_id=7" \
+  -F "pdf=@/path/to/cibil_report.pdf"
+```
+
+The endpoint accepts PDF files up to 20 MB. It strips page numbers, URLs, and excess whitespace from the extracted text before storing it.
+
+**Response:**
+
+```json
+{
+  "status": true,
+  "message": "PDF text extracted successfully.",
+  "data": {
+    "text": "CIBIL TransUnion Score\n742\nPersonal Information...",
+    "textLength": 12840
+  }
+}
+```
+
+## Save CIBIL Data to Loan
+
+After retrieving CIBIL data (by either method), use this endpoint to persist a structured CIBIL account entry at the loan level. You can record each credit account the customer holds as a separate row.
+
+```bash
+curl -X POST "https://your-domain.com/api/save-cibil-data" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 7,
+    "bank_id": 5,
+    "loan_account_no": "HDFC0000056789",
+    "loan_amount": 500000,
+    "outstanding_amount": 320000,
+    "start_date": "2022-01-01",
+    "loan_type_id": 1,
+    "tenure": 36,
+    "tenure_left": 15,
+    "emi_amount": 15000,
+    "obligate_amount": 15000,
+    "cibil_status_id": 1,
+    "account_type_id": 2,
+    "overdue": 0
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": {
+    "id": 23,
+    "loan_id": 7,
+    "loan_account_no": "HDFC0000056789",
+    "emi_amount": 15000,
+    "obligate_amount": 15000
+  }
+}
+```
+
+<Note>
+  Saving CIBIL data also updates the `appraised_obligations` field on the Vanilla Report summary and triggers a recalculation of the eligibility engine — keeping all downstream reports in sync.
+</Note>
+
+## Extracted CIBIL Fields
+
+| Field | Description |
+|---|---|
+| `cibil_score` | Numeric CIBIL score (range: 300–900) |
+| `obligate_amount` | Total monthly EMI obligations across all active accounts |
+| `currentCredit` | Total credit sanctioned across all accounts |
+| `creditUsed` | Credit utilised at time of report |
+| `OnTimePaymentHistory` | Percentage of on-time payments |
+| `CreditCardUtilization` | Credit card utilisation percentage |
+| `OldestCreditAccountPeriod` | Age of the oldest active credit account |
+| `accounts` | Array of credit accounts with payment history, EMI, and balance |
+| `enquiries` | Recent credit enquiries by lender name, date, and enquiry amount |
+| `reportUrl` | Direct URL to the full CIBIL TransUnion report (when available) |
+
+<Tip>
+  A CIBIL score above 700 is generally considered healthy for loan approval. Scores below 650 may require additional underwriting or collateral.
+</Tip>
+
+<Note>
+  CIBIL data is stored at the loan level, not the customer level. This means the same customer can have independent credit snapshots across different loan applications, reflecting changes in their credit profile over time.
+</Note>

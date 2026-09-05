@@ -1,0 +1,295 @@
+---
+title: "Credit Assessment and Loan Eligibility Scoring in Clikzop"
+sidebarTitle: "Credit Assessment"
+description: "Understand how Clikzop Bank EMI assesses creditworthiness using CIBIL scores, bank statements, ITR data, and the Vanilla Report engine."
+---
+
+Before a lender can make a credit decision, they need a complete picture of the applicant's financial health. Clikzop Bank EMI assembles that picture through four distinct data sources — CIBIL credit history, bank account behaviour, income tax returns, and GST turnover — and then runs them through the Vanilla Report engine to produce a single, consistent eligibility score. This page explains each data source, the APIs involved, and how they feed into the final output.
+
+## Four Pillars of Credit Assessment
+
+<CardGroup cols={2}>
+  <Card title="CIBIL Score" icon="chart-line">
+    Fetch the applicant's live credit report and score directly from CIBIL. The platform parses the full tradeline history, active obligations, and enquiry records, storing them against the loan for downstream analysis.
+  </Card>
+  <Card title="Bank Statement Analysis" icon="building-columns">
+    Upload a PDF bank statement or use the Account Aggregator (AA) consent flow. The platform computes monthly closing balances, averages, and total debit/credit volumes to assess cash-flow patterns.
+  </Card>
+  <Card title="ITR Data" icon="file-invoice">
+    Pull salaried or business income tax return details to verify declared income. ITR data informs the Vanilla Report's income figures and cross-checks self-declared earnings.
+  </Card>
+  <Card title="GST Returns" icon="receipt">
+    Retrieve GSTR-1 and GSTR-3B filing data to assess business turnover, filing regularity, and compliance history. Monthly turnover figures are used to compute average business income.
+  </Card>
+</CardGroup>
+
+## CIBIL Score
+
+The CIBIL report is fetched automatically using the customer's mobile number, PAN, and full name already stored on the loan record. You only need to provide the `loan_id`.
+
+### Fetch the CIBIL Report
+
+```bash
+curl -X POST "https://your-domain.com/api/get-cibil-data" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{"loan_id": 7}'
+```
+
+The platform calls the CIBIL service, parses the `TrueLinkCreditReport` response, and stores the following key fields:
+
+| Field | Description |
+|---|---|
+| `cibil_score` | The applicant's CIBIL risk score |
+| `obligate_amount` | Sum of all active EMI obligations across open accounts |
+| `currentCredit` | Total current credit exposure |
+| `creditUsed` | Amount of credit currently utilised |
+| `OnTimePaymentHistory` | Percentage of on-time payments in history |
+| `Inquires` | Number of recent credit enquiries |
+| `OldestCreditAccountPeriod` | Age of the oldest credit account |
+| `CreditMix` | Diversity of credit account types |
+| `CreditCardUtilization` | Credit card utilisation percentage |
+
+For each tradeline (account), the platform also stores: `member_name`, `account_number`, `sanctioned_amount`, `current_balance`, `emi_amount`, `repayment_tenure`, `payment_history`, `rate_of_interest`, and `account_status` (open/closed).
+
+The `obligate_amount` is the total of all active EMI amounts and is automatically fed into the Vanilla Report as the `appraised_obligations` figure.
+
+### Upload a CIBIL PDF
+
+If you already have a printed CIBIL report, you can upload it as a PDF instead of fetching live data. The platform extracts and stores the raw text for review:
+
+```bash
+curl -X POST "https://your-domain.com/api/upload-cibil-pdf" \
+  -H "Authorization: Bearer {your_token}" \
+  -F "loan_id=7" \
+  -F "pdf=@/path/to/cibil_report.pdf"
+```
+
+<Warning>
+  The PDF upload stores raw extracted text with status `pending`. It does not parse structured fields (score, accounts, enquiries) the way the live API fetch does. Use `POST /api/get-cibil-data` wherever possible for the most accurate downstream eligibility calculations.
+</Warning>
+
+## Bank Statement Analysis
+
+Two methods are available to collect and analyse banking data. Choose based on whether the customer can provide a PDF or prefers to share data digitally via Account Aggregator.
+
+<Tabs>
+  <Tab title="PDF Upload">
+    ### Step 1 — Register the bank account
+
+    Before uploading a statement, register the bank account details for the loan:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-banking" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 7,
+        "bank_id": 3,
+        "account_number": "1234567890",
+        "account_type_id": 1
+      }'
+    ```
+
+    This registers the bank account against the loan and pre-populates 12 monthly balance records (April through March) ready for figures to be filled in.
+
+    ### Step 2 — Upload the statement PDF
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/upload-bank-statement" \
+      -H "Authorization: Bearer {your_token}" \
+      -F "loan_id=7" \
+      -F "pdf=@/path/to/statement.pdf"
+    ```
+
+    The platform extracts and stores the full text from each page. Scanned (image-only) PDFs are rejected — the file must be digitally generated with extractable text.
+
+    ### Step 3 — Record monthly closing balances
+
+    For each monthly record, update a closing balance figure by specifying the snapshot date using the `filed_name` field:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-banking-amount" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "id": 101,
+        "loan_id": 7,
+        "filed_name": "closing_balance_5",
+        "amount": 45000
+      }'
+    ```
+
+    Valid `filed_name` values: `closing_balance_5`, `closing_balance_15`, `closing_balance_20`, `closing_balance_25`, `closing_balance_30`. After each update, the platform recalculates `monthly_total` (sum of all five snapshots) and `monthly_average` (total ÷ 5) automatically.
+  </Tab>
+  <Tab title="Account Aggregator">
+    The Account Aggregator flow lets your customer share their bank statement data digitally through a consent-based mechanism. No PDF upload is required.
+
+    ### Step 1 — Create a consent request
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/create-banking-consent" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 7,
+        "from_date": "2023-01-01",
+        "to_date": "2024-01-01"
+      }'
+    ```
+
+    The platform creates a consent record via the Account Aggregator service and stores the `consent_id` and consent `url`. Share this URL with the customer for them to approve in their banking app.
+
+    ### Step 2 — Poll for consent status
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-banking-consent" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"id": 3}'
+    ```
+
+    Call this endpoint periodically until the consent status becomes `ACTIVE`. Once active, the platform stores a session ID needed to fetch the statement.
+
+    ### Step 3 — Retrieve the bank statement
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-bank-statement" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"id": 3}'
+    ```
+
+    The platform retrieves all account transactions from the Account Aggregator service, stores each transaction (`debit`, `credit`, `balance`, `txn_date`, `mode`, `narration`), and automatically computes closing balance snapshots at the 5th, 15th, and 25th of each month across the 12-month statement window. Monthly totals and averages are computed from these snapshots.
+  </Tab>
+</Tabs>
+
+### Key Banking Metrics Computed
+
+| Metric | Description |
+|---|---|
+| `closing_balance_5` | Account balance as of the 5th of the month |
+| `closing_balance_15` | Account balance as of the 15th of the month |
+| `closing_balance_20` | Account balance as of the 20th of the month |
+| `closing_balance_25` | Account balance as of the 25th of the month |
+| `closing_balance_30` | Account balance as of the 30th of the month |
+| `monthly_total` | Sum of all five closing balance snapshots |
+| `monthly_average` | Average of all five closing balance snapshots (total ÷ 5) |
+
+## ITR Data
+
+Pull income tax return details to verify the applicant's declared income. Use the appropriate endpoint based on employment type:
+
+<Tabs>
+  <Tab title="Salaried ITR">
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-salaried-itr-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"loan_id": 7, "customer_id": 42}'
+    ```
+
+    Returns filing history, yearly income figures, and any outstanding tax demands for salaried applicants.
+  </Tab>
+  <Tab title="Business ITR">
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-business-itr-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"loan_id": 7, "customer_id": 42}'
+    ```
+
+    Returns business income details, profit and loss figures, and filing history for self-employed or business applicants.
+  </Tab>
+</Tabs>
+
+## Vanilla Report (Eligibility Engine)
+
+The Vanilla Report is the final aggregation step. It takes income figures from ITR, obligation data from CIBIL, and computes the applicant's maximum eligible EMI and loan amount using FOIR and LTV parameters set by your organization.
+
+### Key Output Fields
+
+| Field | Description |
+|---|---|
+| `total_annual_income` | Sum of all eligible income sources across all financial years |
+| `appraised_monthly_income` | `total_annual_income / 12` |
+| `appraised_obligations` | Total active EMI obligations from CIBIL (`obligate_amount`) |
+| `net_appraised_income` | `appraised_monthly_income - appraised_obligations` |
+| `foir` | Fixed Obligations to Income Ratio (%) — set by your admin |
+| `ltv` | Loan-to-Value ratio (%) — set by your admin |
+| `max_emi` | Maximum eligible EMI: `(appraised_monthly_income × FOIR%) - appraised_obligations` |
+| `emi_factor` | EMI per ₹1,00,000 at the given interest rate and tenor |
+| `eligibility` | Maximum eligible loan amount: `max_emi / emi_factor` |
+
+### Building the Vanilla Report
+
+<Steps>
+  <Step title="Save financial year data">
+    Create the Vanilla Report master record and add income figures for each financial year:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-vanilla-year" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 7,
+        "customer_id": 42,
+        "financial_year": "2023-24",
+        "turn_over": 1800000,
+        "gross_profit": 420000
+      }'
+    ```
+  </Step>
+
+  <Step title="Update field values and eligibility percentages">
+    For each income field (e.g. salary, rental income, business profit), update the amount and the percentage of that income considered eligible:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/update-vanilla-values" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "field_id": 4,
+        "id": 22,
+        "amount": 420000,
+        "eligible_percentage": 75,
+        "loan_id": 7
+      }'
+    ```
+
+    After each update, the platform recalculates the average amount across years, applies the eligibility percentage, and recomputes the total eligible income.
+  </Step>
+
+  <Step title="Set summary parameters">
+    Configure the key rate and ratio parameters that drive the final calculation:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/update-vanilla-summary" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 7,
+        "id": 1,
+        "field_name": "foir",
+        "value": 50
+      }'
+    ```
+
+    Call this endpoint separately for each parameter: `foir`, `ltv`, `interest_rate`, and `tenor` (in months).
+  </Step>
+
+  <Step title="Generate the bank eligibility report">
+    Once all data is in place, generate the final bank eligibility report:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/generate-bank-eligibility" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"loan_id": 7}'
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  Run all four assessment components — CIBIL score, bank statement analysis, ITR data, and GST returns — before generating the final eligibility report for the most accurate results. Incomplete data causes the Vanilla Report to understate eligible income or omit obligation amounts.
+</Tip>

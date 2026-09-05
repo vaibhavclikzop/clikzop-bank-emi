@@ -1,0 +1,65 @@
+---
+title: "Clikzop Bank EMI: Loan Origination Platform"
+sidebarTitle: "Home"
+description: "Clikzop Bank EMI is a multi-tenant loan origination platform for DSAs and financial institutions. Manage KYC, credit assessment, and loan applications via REST API."
+---
+
+Clikzop Bank EMI gives DSAs and financial institutions a single, unified API to manage the complete loan origination workflow — from customer onboarding and identity verification to CIBIL score retrieval, bank statement analysis, and loan eligibility reporting. This documentation covers everything you need to integrate and use the platform.
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Make your first API call and create a loan application in minutes
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Get your access token and authenticate every request
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Full reference for all REST endpoints, request fields, and responses
+  </Card>
+  <Card title="Guides" icon="book-open" href="/guides/onboard-customer">
+    Step-by-step walkthroughs for common loan origination workflows
+  </Card>
+</CardGroup>
+
+## Platform Overview
+
+Clikzop Bank EMI covers every stage of the loan origination process:
+
+<CardGroup cols={3}>
+  <Card title="Customer KYC" icon="id-card" href="/concepts/kyc-verification">
+    Verify Aadhaar, PAN, Driving License, Passport, and company details
+  </Card>
+  <Card title="Credit Assessment" icon="chart-line" href="/concepts/credit-assessment">
+    Fetch CIBIL scores, parse credit reports, and compute loan eligibility
+  </Card>
+  <Card title="Bank Statements" icon="building-columns" href="/guides/bank-statement-analysis">
+    Upload statements or use Account Aggregator for automated analysis
+  </Card>
+  <Card title="ITR & GST" icon="file-invoice" href="/guides/itr-gst-verification">
+    Pull income tax returns and GST filing data for financial assessment
+  </Card>
+  <Card title="Loan Management" icon="file-contract" href="/guides/submit-loan-application">
+    Create, track, and manage loans through their full lifecycle
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/integrations/webhooks">
+    Receive real-time event notifications from verification providers
+  </Card>
+</CardGroup>
+
+## Get Started in Three Steps
+
+<Steps>
+  <Step title="Authenticate">
+    Call `POST /api/login` with your credentials to receive a Bearer token. Pass this token in the `Authorization` header on every subsequent request.
+  </Step>
+  <Step title="Onboard a Customer">
+    Create a customer profile with `POST /api/save-customer`, verify their identity documents, and attach their bank account details.
+  </Step>
+  <Step title="Submit a Loan Application">
+    Create a loan with `POST /api/save-loan`, upload required checklist documents, run credit assessment, and generate the eligibility report.
+  </Step>
+</Steps>
+
+<Note>
+  All API calls require a valid Bearer token. See [Authentication](/authentication) for details on obtaining and refreshing tokens.
+</Note>

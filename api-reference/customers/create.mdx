@@ -1,0 +1,329 @@
+---
+title: "Create and Register New Customer Profiles in the API"
+sidebarTitle: "Create Customer"
+description: "POST /api/save-customer and POST /api/save-customer-details — create a new customer record and fill in additional profile and employment details."
+---
+
+Before creating a customer record, always check whether the mobile number is already registered in your tenant. If the number exists, the platform returns the existing customer so you can continue without creating a duplicate. Once confirmed as new, submit the full customer profile via `/api/save-customer`, which also initiates a loan application in a single request. Use `/api/save-customer-details` when you need to register a customer without a loan — for example, during a lead-qualification step.
+
+---
+
+## Check mobile number availability
+
+<Note>
+  All endpoints in this section require a valid `Authorization: Bearer {token}` header. See the [Authentication guide](/api-reference/auth) for details.
+</Note>
+
+Use this endpoint to check whether a 10-digit mobile number is already linked to a customer in your tenant before creating a new record.
+
+**POST** `/api/check-mobile-number`
+
+<Tabs>
+  <Tab title="Request">
+    <ParamField body="number" type="string" required>
+      The 10-digit mobile number to look up. Must be exactly 10 digits.
+    </ParamField>
+
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-mobile-number" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{"number": "9876543210"}'
+    ```
+  </Tab>
+  <Tab title="Response — found">
+    When a customer with that number already exists, the API returns `status: true` with the existing customer object.
+
+    ```json title="200 OK — customer found"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": {
+        "id": 42,
+        "name": "Priya Sharma",
+        "masked_number": "98765*****",
+        "email": "priya@example.com",
+        "pan_masked": "ABCXX1234X",
+        "is_verified": false
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Response — not found">
+    When no customer is registered with that number, the API returns `status: false` with a 404.
+
+    ```json title="404 — no customer found"
+    {
+      "status": false,
+      "message": "No Customer Found",
+      "data": []
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Create a new customer with loan
+
+Use `/api/save-customer` to create a customer and simultaneously initiate a loan application. All PII fields are encrypted at rest and returned masked in every API response.
+
+**POST** `/api/save-customer`
+
+<Note>
+  PII fields such as PAN, Aadhaar, and bank account numbers are stored encrypted and returned masked in all API responses.
+</Note>
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="number" type="string" required>
+      10-digit mobile number for the customer. Must be unique across your tenant.
+    </ParamField>
+
+    <ParamField body="name" type="string" required>
+      Full legal name of the customer.
+    </ParamField>
+
+    <ParamField body="email" type="string" required>
+      A valid email address. Used for communication and login.
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth in `YYYY-MM-DD` format. Example: `1990-04-15`.
+    </ParamField>
+
+    <ParamField body="pan_no" type="string" required>
+      10-character PAN in the format `ABCDE1234F`. The PAN is verified and marked as confirmed on creation.
+    </ParamField>
+
+    <ParamField body="signup_document_type" type="string" required>
+      The primary identity document type. Accepted values: `aadhaar`, `pan`, `driving_license`, `voter_id`, `passport`.
+    </ParamField>
+
+    <ParamField body="signup_document" type="string" required>
+      The document number matching `signup_document_type`. Stored encrypted.
+    </ParamField>
+
+    <ParamField body="loan_type_id" type="integer" required>
+      ID of the loan product. Retrieve available types from `GET /api/get-loan-type`.
+    </ParamField>
+
+    <ParamField body="loan_amount" type="number" required>
+      Requested loan amount in INR.
+    </ParamField>
+
+    <ParamField body="tenure" type="integer" required>
+      Loan tenure in months.
+    </ParamField>
+
+    <ParamField body="income_type_id" type="integer">
+      Income category ID (e.g., salaried, self-employed). Determines which document checklist is assigned.
+    </ParamField>
+
+    <ParamField body="address" type="string">
+      Street address of the customer.
+    </ParamField>
+
+    <ParamField body="city" type="string">
+      City of residence.
+    </ParamField>
+
+    <ParamField body="district" type="string">
+      District of residence.
+    </ParamField>
+
+    <ParamField body="state" type="string">
+      State of residence.
+    </ParamField>
+
+    <ParamField body="country" type="string">
+      Country of residence. Defaults to India.
+    </ParamField>
+
+    <ParamField body="pincode" type="string">
+      6-digit postal code.
+    </ParamField>
+
+    <ParamField body="loan_purpose" type="string">
+      A short description of the loan purpose.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/save-customer" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "number": "9876543210",
+        "name": "Priya Sharma",
+        "email": "priya@example.com",
+        "dob": "1990-04-15",
+        "pan_no": "ABCDE1234F",
+        "signup_document_type": "aadhaar",
+        "signup_document": "123456789012",
+        "loan_type_id": 2,
+        "loan_amount": 500000,
+        "tenure": 36,
+        "income_type_id": 1,
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "pincode": "400001"
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="201 Created"
+    {
+      "status": true,
+      "message": "Customer created successfully",
+      "data": {
+        "id": 101,
+        "name": "Priya Sharma",
+        "masked_number": "98765*****",
+        "email": "priya@example.com",
+        "pan_masked": "ABCXX1234F",
+        "aadhar_masked": "XXXXXXXX9012",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "pincode": "400001",
+        "pan_verified": 1,
+        "adhar_verified": 0,
+        "created_at": "2024-05-01T10:30:00.000000Z"
+      }
+    }
+    ```
+
+    <Expandable title="Response fields">
+      <ResponseField name="data.id" type="integer">
+        Internal customer ID. Use this in all subsequent API calls.
+      </ResponseField>
+      <ResponseField name="data.name" type="string">
+        Full name as submitted.
+      </ResponseField>
+      <ResponseField name="data.masked_number" type="string">
+        Mobile number with last 5 digits masked (e.g., `98765*****`).
+      </ResponseField>
+      <ResponseField name="data.email" type="string">
+        Email address on file.
+      </ResponseField>
+      <ResponseField name="data.pan_masked" type="string">
+        PAN with middle characters masked (e.g., `ABCXX1234F`).
+      </ResponseField>
+      <ResponseField name="data.pan_verified" type="integer">
+        `1` if PAN was verified at creation, `0` otherwise.
+      </ResponseField>
+      <ResponseField name="data.adhar_verified" type="integer">
+        `1` if Aadhaar has been verified via `/api/check-aadhar-card`.
+      </ResponseField>
+    </Expandable>
+  </Tab>
+</Tabs>
+
+---
+
+## Create a customer without a loan
+
+Use `/api/save-customer-details` to register a customer record independently — without creating a loan application at the same time. This is useful for pre-qualification flows or lead capture.
+
+**POST** `/api/save-customer-details`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="number" type="string" required>
+      10-digit mobile number. Must be unique across your tenant.
+    </ParamField>
+
+    <ParamField body="name" type="string" required>
+      Full legal name.
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="pan_no" type="string" required>
+      10-character PAN number in the format `ABCDE1234F`.
+    </ParamField>
+
+    <ParamField body="signup_document_type" type="string" required>
+      Primary identity document type. Accepted: `aadhaar`, `pan`, `driving_license`, `voter_id`, `passport`.
+    </ParamField>
+
+    <ParamField body="signup_document" type="string" required>
+      Document number for the selected `signup_document_type`. Stored encrypted.
+    </ParamField>
+
+    <ParamField body="email" type="string">
+      Customer email address.
+    </ParamField>
+
+    <ParamField body="address" type="string">
+      Street address.
+    </ParamField>
+
+    <ParamField body="city" type="string">
+      City of residence.
+    </ParamField>
+
+    <ParamField body="district" type="string">
+      District of residence.
+    </ParamField>
+
+    <ParamField body="state" type="string">
+      State of residence.
+    </ParamField>
+
+    <ParamField body="country" type="string">
+      Country of residence.
+    </ParamField>
+
+    <ParamField body="pincode" type="string">
+      6-digit postal code.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/save-customer-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "number": "9123456780",
+        "name": "Rahul Verma",
+        "dob": "1985-08-22",
+        "pan_no": "BXYZR5678K",
+        "signup_document_type": "pan",
+        "signup_document": "BXYZR5678K",
+        "email": "rahul@example.com",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "pincode": "411001"
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="201 Created"
+    {
+      "status": true,
+      "message": "Customer created successfully",
+      "data": {
+        "id": 102,
+        "name": "Rahul Verma",
+        "masked_number": "91234*****",
+        "email": "rahul@example.com",
+        "pan_masked": "BXXXR5678K",
+        "pan_verified": 1,
+        "city": "Pune",
+        "state": "Maharashtra",
+        "created_at": "2024-05-02T09:00:00.000000Z"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use `/api/save-customer` when you want to create a customer and a loan in one step. Use `/api/save-customer-details` when you only need to register the customer profile first.
+</Tip>

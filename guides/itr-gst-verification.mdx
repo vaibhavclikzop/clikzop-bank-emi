@@ -1,0 +1,310 @@
+---
+title: "Verify ITR and GST Data for Loan Assessment — Clikzop"
+sidebarTitle: "ITR & GST"
+description: "Pull salaried or business ITR data and GST return filings directly from government records to support financial assessment in Clikzop."
+---
+
+Clikzop Bank EMI integrates directly with government data sources to fetch Income Tax Return (ITR) filings and GST return data. For ITR, the platform authenticates using the customer's income tax portal credentials, retrieves multi-year filing history, and stores income and financial data per applicant per loan. For GST, it supports lookup by PAN, by GSTIN, and a two-step OTP flow using the GST portal's Transaction Reference Number (TRN). All data is stored at the loan applicant level.
+
+<Note>
+  ITR and GST data are stored at the loan applicant level, allowing independent assessment for the primary applicant and each co-applicant on the same loan.
+</Note>
+
+## Income Tax Returns (ITR)
+
+<Tabs>
+  <Tab title="Salaried">
+    Use this endpoint for customers with salaried income. It authenticates using the customer's income tax portal username and password, retrieves the full filing history, outstanding demands, and per-year financial data, then stores everything against the loan applicant record.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-salaried-itr-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_id": 7,
+        "loan_applicant_id": 3,
+        "username": "ABCDE1234F",
+        "password": "itportal_password"
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "ITR saved successfully",
+      "data": {
+        "profileData": {
+          "pan_no": "ABCDE1234F",
+          "name": "Rahul Sharma",
+          "dob": "1990-05-15",
+          "email": "rahul@example.com",
+          "city": "Pune",
+          "state_code": "MH"
+        },
+        "filingData": {
+          "filingData": [
+            {
+              "financial_year": "2022-23",
+              "assessment_year": "2023-24",
+              "form_name": "ITR-1",
+              "filing_date": "15-07-2023",
+              "financialInfo": {
+                "salary": 1200000,
+                "taxes_paid": 85000,
+                "refund": 5000,
+                "total_advance_tax_paid": 80000
+              },
+              "bank_details": [
+                {
+                  "bank_name": "HDFC Bank",
+                  "account_no": "XXXX6789",
+                  "ifsc_code": "HDFC0001234",
+                  "use_for_refund": true
+                }
+              ],
+              "delay": false,
+              "demand_notice": false
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+    The platform stores per-year ITR records and also updates the Vanilla Report salary values for each financial year automatically.
+  </Tab>
+
+  <Tab title="Business / Self-Employed">
+    Use this endpoint for self-employed customers or business entities. It retrieves profit & loss data, balance sheet fields, and turnover figures per financial year, storing a detailed financial record per year.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-business-itr-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_id": 7,
+        "loan_applicant_id": 3,
+        "username": "ABCDE1234F",
+        "password": "itportal_password"
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": []
+    }
+    ```
+
+    For each financial year in the filing data, the platform creates two records:
+
+    - **Annual summary** — covering salary, house property, capital gains, and other income sources
+    - **Detailed financials** — full P&L and balance sheet fields per year
+
+    Key fields stored in the detailed financials record:
+
+    | Field | Description |
+    |---|---|
+    | `operating_turnover` | Revenue from business operations |
+    | `gross_profit` | Gross profit for the year |
+    | `profit_before_tax` | Profit before tax deductions |
+    | `profit_after_tax` | Net profit after all taxes |
+    | `ebitda` | Earnings before interest, taxes, depreciation, amortisation |
+    | `total_revenue` | Total revenue including non-operating income |
+    | `total_assets` | Total assets on the balance sheet |
+    | `total_liability` | Total liabilities |
+    | `total_equity` | Total equity / net worth |
+    | `cash_and_cash_eqv` | Cash and cash equivalents |
+    | `trade_receivables` | Outstanding debtors |
+    | `trade_payable` | Outstanding creditors |
+    | `interest_expense` | Finance costs |
+    | `direct_cost` | Cost of goods sold / direct costs |
+  </Tab>
+</Tabs>
+
+## GST Data
+
+<Tabs>
+  <Tab title="By PAN">
+    Fetch GST registration details and filing history for all GSTINs linked to a PAN number. The data is stored against the customer's company record.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-gst-details-via-pan" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "pan_no": "ABCDE1234F",
+        "customer_id": 42,
+        "company_id": 8
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "masterData": {
+          "gst_in": "27ABCDE1234F1Z5",
+          "company_name": "Rahul Enterprises",
+          "registration_name": "RAHUL ENTERPRISES",
+          "registration_date": "2018-07-01",
+          "status": "Active",
+          "state": "Maharashtra",
+          "trade_name": "Rahul Enterprises",
+          "e_invoice_status": "Yes"
+        },
+        "fillingData": [
+          {
+            "return_type": "GSTR-3B",
+            "return_period": "032024",
+            "due_date": "2024-04-20",
+            "is_delay": false,
+            "delay_days": 0,
+            "status": "Filed"
+          }
+        ]
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="By GSTIN">
+    Fetch GST filing details directly using a GSTIN. Returns GSTR-1 and GSTR-3B filing records including taxable turnover and tax breakdowns.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-gst-details-by-gstin" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "gst_no": "27ABCDE1234F1Z5",
+        "customer_id": 42
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 14,
+        "gst_in": "27ABCDE1234F1Z5",
+        "company_name": "Rahul Enterprises",
+        "registration_date": "2018-07-01",
+        "status": "Active",
+        "state": "Maharashtra"
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="GST Filing (OTP)">
+    For fetching GST return data via the GST portal's TRN (Transaction Reference Number) flow, use this two-step OTP verification. This method authenticates the customer directly with the GST portal.
+
+    **Step 1 — Send OTP:**
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/send-otp-for-gst-filling" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "username": "rahul_sharma",
+        "gst": "27ABCDE1234F1Z5",
+        "customer_id": 42,
+        "loan_id": 7
+      }'
+    ```
+
+    The response includes a `request_id` you must store and pass in the OTP verification step.
+
+    **Step 2 — Verify OTP and Fetch Returns:**
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/verify-otp-for-gst-filling" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "otp": "123456",
+        "gst": "27ABCDE1234F1Z5",
+        "request_id": "REQ_20240601_XYZ",
+        "customer_id": 42,
+        "loan_id": 7
+      }'
+    ```
+
+    On success, the platform stores the GST details for the GSTIN against the loan.
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {
+        "status": true,
+        "message": "OTP verified and GST data saved"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## GST Running Year Data
+
+After fetching GST details, store annual GST turnover summaries at the loan level for use in the Vanilla Report and eligibility assessment.
+
+**Save Annual Summary:**
+
+```bash
+curl -X POST "https://your-domain.com/api/save-gst-running-year" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 7,
+    "company": "Rahul Enterprises",
+    "year": 2023,
+    "location": "Pune"
+  }'
+```
+
+The platform creates 12 monthly detail rows (April to March) initialised to zero, and sets the `financial_year` automatically (e.g., `2023-24`).
+
+**Update Monthly Amount:**
+
+```bash
+curl -X POST "https://your-domain.com/api/save-gst-running-year-amount" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 45,
+    "amount": 350000
+  }'
+```
+
+The `id` is the monthly detail record ID for the target month. After each update, `total_turnover` and `average_turnover` on the annual summary record are recalculated automatically.
+
+## Key GST Fields
+
+| Field | Description |
+|---|---|
+| `gst_in` | GST Identification Number (15-character) |
+| `registration_date` | Date the GSTIN was registered |
+| `status` | Active, Cancelled, or Suspended |
+| `return_type` | Filing type: `GSTR-1`, `GSTR-3B`, etc. |
+| `return_period` | Period in `MMYYYY` format |
+| `is_delay` | Whether the return was filed after the due date |
+| `delay_days` | Number of days the return was filed late |
+| `trade_name` | Trade name registered under the GSTIN |
+| `total_turnover` | Aggregated annual turnover across all months |
+| `average_turnover` | Average monthly turnover (`total_turnover / 7`) |

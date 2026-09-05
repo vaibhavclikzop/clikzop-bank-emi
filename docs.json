@@ -1,0 +1,114 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "Clikzop Bank EMI",
+  "theme": "almond",
+  "colors": {
+    "primary": "#fc4539",
+    "light": "#fca9a2",
+    "dark": "#040404"
+  },
+  "logo": {
+    "light": "https://media.brand.dev/2adc9a2b-c4bd-442b-bb19-86c424078461.svg",
+    "dark": "https://media.brand.dev/2adc9a2b-c4bd-442b-bb19-86c424078461.svg"
+  },
+  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/vaibhavclikzop"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/tenants-and-roles",
+              "concepts/loan-lifecycle",
+              "concepts/kyc-verification",
+              "concepts/credit-assessment"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/onboard-customer",
+              "guides/submit-loan-application",
+              "guides/bank-statement-analysis",
+              "guides/cibil-report",
+              "guides/itr-gst-verification"
+            ]
+          },
+          {
+            "group": "Webhooks & Integrations",
+            "pages": [
+              "integrations/webhooks",
+              "integrations/karza",
+              "integrations/account-aggregator"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Auth & Users",
+            "pages": [
+              "api-reference/auth/login",
+              "api-reference/auth/otp",
+              "api-reference/auth/profile",
+              "api-reference/users/manage"
+            ]
+          },
+          {
+            "group": "Customers",
+            "pages": [
+              "api-reference/customers/create",
+              "api-reference/customers/retrieve",
+              "api-reference/customers/bank-accounts",
+              "api-reference/customers/documents"
+            ]
+          },
+          {
+            "group": "Loans",
+            "pages": [
+              "api-reference/loans/create",
+              "api-reference/loans/retrieve",
+              "api-reference/loans/co-applicant",
+              "api-reference/loans/checklist"
+            ]
+          },
+          {
+            "group": "Credit & Financials",
+            "pages": [
+              "api-reference/credit/cibil",
+              "api-reference/credit/banking",
+              "api-reference/credit/itr",
+              "api-reference/credit/gst",
+              "api-reference/credit/eligibility"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

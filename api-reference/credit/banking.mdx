@@ -1,0 +1,385 @@
+---
+title: "Bank Statement Upload and Cash Flow Analysis API Docs"
+sidebarTitle: "Banking"
+description: "Upload bank statement PDFs or use Account Aggregator consent to extract transactions, monthly balances, and cash flow metrics for a loan."
+---
+
+Bank statement analysis gives lenders a verified view of an applicant's cash flow, transaction behaviour, and average monthly balances. Clikzop Bank EMI supports two data-collection methods: direct PDF upload with text extraction, and the Account Aggregator (AA) flow, which lets applicants consent to share their statement data digitally through our Account Aggregator partner. For automated analysis via a third-party upload portal, you can also use the bank statement initiation flow. All methods store transaction records and monthly balance snapshots against the loan.
+
+---
+
+## Create a Banking Record
+
+<ParamField path="POST /api/save-banking" type="endpoint" />
+
+Create a banking master record for a loan before uploading any statements. This initialises the banking record and auto-creates monthly detail rows (April through March) that will later hold the closing balance snapshots used in cash flow analysis.
+
+<Note>
+  You must call `save-banking` before uploading a bank statement PDF. The `banking_id` returned is used in subsequent upload and analysis calls.
+</Note>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-banking" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "bank_id": 4,
+    "account_number": "001234567890",
+    "account_type_id": 2
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to which this banking record belongs.
+</ParamField>
+
+<ParamField body="bank_id" type="integer" required>
+  The bank ID. Retrieve valid values from `GET /api/get-banks` (super_admin).
+</ParamField>
+
+<ParamField body="account_number" type="string" required>
+  The applicant's bank account number.
+</ParamField>
+
+<ParamField body="account_type_id" type="integer" required>
+  Account type ID (e.g., Savings, Current). Retrieve valid values from `GET /api/get-account-type`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+---
+
+## Upload Bank Statement PDF
+
+<ParamField path="POST /api/upload-bank-statement" type="endpoint" />
+
+Upload a bank statement PDF for a loan. The platform extracts the text page-by-page, stores both the raw PDF and the extracted text file, and creates a pending record for further processing. Only digitally generated PDFs are supported — scanned image PDFs are rejected.
+
+<Warning>
+  The platform checks that the extracted text is at least 300 characters. If a scanned PDF is detected, the API returns a `422` error: `"Scanned PDF detected. Please upload a digitally generated PDF."`
+</Warning>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/upload-bank-statement" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -F "loan_id=1" \
+  -F "pdf=@/path/to/bank-statement.pdf"
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to associate the bank statement with.
+</ParamField>
+
+<ParamField body="pdf" type="file" required>
+  The bank statement PDF file. Must be a valid PDF (`application/pdf`). Maximum file size: 20 MB. Must be a digitally generated PDF, not a scanned image.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "PDF text extracted successfully.",
+  "data": {
+    "text": "PAGE 1\nAccount Number: XXXX7890\nOpening Balance: 42000.00\n...",
+    "textLength": 18540
+  }
+}
+```
+
+---
+
+## Record Monthly Balance Amounts
+
+<ParamField path="POST /api/save-banking-amount" type="endpoint" />
+
+Save or update a specific balance field for a monthly detail row within a banking record. The platform computes the `monthly_total` (sum of closing balances at the 5th, 15th, 20th, 25th, and 30th of the month) and `monthly_average` (total divided by 5) automatically after each update.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/save-banking-amount" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 22,
+    "loan_id": 1,
+    "filed_name": "closing_balance_5",
+    "amount": 38500
+  }'
+```
+
+### Parameters
+
+<ParamField body="id" type="integer" required>
+  The ID of the monthly detail row to update.
+</ParamField>
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan. Used to validate the record ownership.
+</ParamField>
+
+<ParamField body="filed_name" type="string" required>
+  The specific balance field to update. Valid values are `closing_balance_5`, `closing_balance_15`, `closing_balance_20`, `closing_balance_25`, and `closing_balance_30` — representing the closing balance on the 5th, 15th, 20th, 25th, and 30th of the month respectively.
+</ParamField>
+
+<ParamField body="amount" type="number" required>
+  The closing balance amount for the specified date.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+---
+
+## Retrieve Analysed Bank Statement Data
+
+<ParamField path="POST /api/get-bank-statement" type="endpoint" />
+
+Retrieve the analysed bank statement data for a loan, including all transactions collected via the Account Aggregator flow and the derived banking master record.
+
+<Tip>
+  Use the Account Aggregator flow (`POST /api/create-banking-consent`) for automated, consent-based data collection. The AA flow populates transactions, account profile, IFSC, branch, and current balance automatically — eliminating manual PDF upload entirely.
+</Tip>
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/get-bank-statement" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 5
+  }'
+```
+
+### Parameters
+
+<ParamField body="id" type="integer" required>
+  The ID of the banking consent record to fetch statement data for.
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="status" type="boolean">
+  `true` on success.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data fields">
+    <ResponseField name="data.banking_records" type="array">
+      Array of banking master records, each containing account profile, summary, and statement date range.
+    </ResponseField>
+    <ResponseField name="data.total_credit" type="number">
+      Total credits across all statement transactions.
+    </ResponseField>
+    <ResponseField name="data.total_debit" type="number">
+      Total debits across all statement transactions.
+    </ResponseField>
+    <ResponseField name="data.current_balance" type="number">
+      The most recent closing balance reported by the bank.
+    </ResponseField>
+    <ResponseField name="data.transactions" type="array">
+      Array of individual transaction records. Each entry includes `txn_date`, `value_date`, `mode`, `description`, `credit`, `debit`, `balance`, and `reference_number`.
+    </ResponseField>
+    <ResponseField name="data.statement_from" type="string">
+      Start date of the statement period (`YYYY-MM-DD`).
+    </ResponseField>
+    <ResponseField name="data.statement_to" type="string">
+      End date of the statement period (`YYYY-MM-DD`).
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Account Aggregator — Create Consent
+
+<ParamField path="POST /api/create-banking-consent" type="endpoint" />
+
+Initiate an Account Aggregator (AA) consent request for a loan applicant. The platform creates a consent record and returns an authorisation URL that you redirect the applicant to, so they can grant access to their bank account data through our Account Aggregator partner.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/create-banking-consent" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "from_date": "2023-04-01",
+    "to_date": "2024-03-31"
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan. The customer's mobile number is resolved automatically from the linked loan record.
+</ParamField>
+
+<ParamField body="from_date" type="string" required>
+  Start date of the bank statement period to request (`YYYY-MM-DD`).
+</ParamField>
+
+<ParamField body="to_date" type="string" required>
+  End date of the bank statement period to request (`YYYY-MM-DD`).
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+<Note>
+  After a successful call, retrieve the consent ID and redirect URL from the stored consent record for the loan. Share the redirect URL with the applicant to complete consent authorisation.
+</Note>
+
+---
+
+## Account Aggregator — Check Consent Status
+
+<ParamField path="POST /api/check-banking-consent" type="endpoint" />
+
+Poll the status of an existing AA consent record. If the record is still `PENDING`, the platform checks with the Account Aggregator partner to see whether the applicant has authorised consent. Once consent is confirmed, call `POST /api/get-bank-statement` to retrieve the statement data.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/check-banking-consent" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 5
+  }'
+```
+
+### Parameters
+
+<ParamField body="id" type="integer" required>
+  The ID of the consent record to check.
+</ParamField>
+
+### Response
+
+<Tabs>
+  <Tab title="Consent Verified">
+    Returned when the consent was previously `PENDING` and has now been confirmed. The statement data is ready to fetch via `POST /api/get-bank-statement`.
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {}
+    }
+    ```
+  </Tab>
+  <Tab title="Already Active">
+    Returned when the consent record is already in `ACTIVE` state (verified but statement not yet fetched).
+    ```json
+    {
+      "status": true,
+      "message": "Consent already verified",
+      "data": []
+    }
+    ```
+  </Tab>
+  <Tab title="Already Complete">
+    Returned when the statement has already been fetched for this consent.
+    ```json
+    {
+      "status": true,
+      "message": "Already fetched statement",
+      "data": []
+    }
+    ```
+  </Tab>
+  <Tab title="Not Yet Verified">
+    Returned when the consent is still `PENDING` — the applicant has not yet authorised it.
+    ```json
+    {
+      "status": false,
+      "message": "Consent not verified",
+      "data": {}
+    }
+    ```
+  </Tab>
+</Tabs>
+
+The `status` field on the consent record reflects one of: `PENDING`, `ACTIVE`, or `COMPLETE`.
+
+---
+
+## Initiate Bank Statement Upload Session
+
+<ParamField path="POST /api/initiate-bank-statement" type="endpoint" />
+
+Initiate a bank statement collection session using our third-party upload flow. This returns a `transactionID` that you pass to the upload widget or redirect URL to start the customer-facing upload experience.
+
+### Request
+
+```bash
+curl -X POST "https://your-domain.com/api/initiate-bank-statement" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 1,
+    "bank_institute_id": 12
+  }'
+```
+
+### Parameters
+
+<ParamField body="loan_id" type="integer" required>
+  The ID of the loan to initiate the statement upload for.
+</ParamField>
+
+<ParamField body="bank_institute_id" type="integer" required>
+  The bank institute ID for the applicant's bank. Retrieve valid values from `GET /api/get-bank-institutes`.
+</ParamField>
+
+### Response
+
+```json
+{
+  "status": true,
+  "message": "Transaction ID created successfully",
+  "transactionID": "TXN-2024-00123456",
+  "data": []
+}
+```

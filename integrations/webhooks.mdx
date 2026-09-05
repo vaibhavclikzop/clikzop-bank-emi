@@ -1,0 +1,93 @@
+---
+title: "Webhook Events, Payload Validation, and Processing"
+sidebarTitle: "Webhooks"
+description: "Clikzop Bank EMI relays real-time verification events to your endpoint. Learn how to configure, validate, and process incoming webhook payloads."
+---
+
+Clikzop Bank EMI dispatches webhooks from integrated verification providers — primarily Karza — to your configured endpoint URL. Rather than requiring you to poll third-party APIs, the platform relays verification events to you the moment they occur, enabling you to build responsive, event-driven loan origination workflows.
+
+## How Webhooks Work
+
+The platform acts as a relay between third-party providers and your system. When a verification completes asynchronously (for example, a GST filing check), Karza POSTs the result to Clikzop Bank EMI's webhook receiver. The platform records the event, links it to the relevant loan record, and makes the data available for downstream processing.
+
+If you are building a direct integration, you can also point Karza's webhook configuration to the platform's receiver endpoint. Karza delivers events via HTTP POST.
+
+**Webhook receiver endpoint:**
+
+```http
+POST /api/webhook/karza-webhook
+```
+
+Requests are authenticated using a secret token passed as a query parameter:
+
+```http
+POST /api/webhook/karza-webhook?token={your_webhook_secret}
+```
+
+The platform verifies the token using a constant-time comparison to prevent timing attacks. Any request with a missing or invalid token receives a `401 Unauthorized` response.
+
+## Payload Structure
+
+Karza sends a JSON body to the webhook endpoint. The platform parses and persists this payload, associating it with the relevant loan GST record.
+
+```json
+{
+  "requestId": "karza-req-abc123",
+  "event": "gst_return_complete",
+  "statusCode": 101,
+  "statusMessage": "Success",
+  "result": {}
+}
+```
+
+## Webhook Validation
+
+Before processing any incoming request, the platform validates the `token` query parameter against the configured webhook secret. To set up your webhook secret, contact your account manager.
+
+An incoming request without a valid token receives the following error response:
+
+```json
+{
+  "status": false,
+  "message": "Unauthorized",
+  "data": []
+}
+```
+
+A correctly authenticated and processed webhook returns:
+
+```json
+{
+  "status": true,
+  "message": "Save successfully",
+  "data": []
+}
+```
+
+## What Gets Recorded
+
+Every authenticated webhook event is persisted for auditing and downstream processing. The platform captures the following information from each incoming event:
+
+| Field | Description |
+|---|---|
+| Provider | Webhook source (e.g., `KARZA`) |
+| Event | Event type identifier from the provider |
+| Request ID | Provider-issued request ID for correlation and deduplication |
+| HTTP method | Method used for the incoming request |
+| IP address | Originating IP address of the request |
+| Associated loan record | The loan GST record linked to this event, if applicable |
+
+<Note>
+  Webhook delivery and retry logic is handled by the third-party provider. Contact your account manager to configure your webhook secret.
+</Note>
+
+## Related Integrations
+
+<CardGroup cols={2}>
+  <Card title="Karza Integration" icon="shield-check" href="/integrations/karza">
+    Learn how Clikzop Bank EMI uses Karza for GST verification and KYC document checks.
+  </Card>
+  <Card title="Account Aggregator" icon="building-columns" href="/integrations/account-aggregator">
+    Collect customer bank statements via the consent-based Account Aggregator flow.
+  </Card>
+</CardGroup>

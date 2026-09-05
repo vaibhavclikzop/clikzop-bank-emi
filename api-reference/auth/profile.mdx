@@ -1,0 +1,240 @@
+---
+title: "Clikzop Bank EMI User Profile API — Get and Update"
+sidebarTitle: "Profile"
+description: "GET /api/get-profile-details returns your authenticated user profile. POST /api/update-profile updates your name, address, and organization fields."
+---
+
+Every authenticated user has a profile record that stores their personal details, organizational affiliation, and location data. Use `GET /api/get-profile-details` to retrieve the full profile for the currently authenticated user — useful for populating settings screens or confirming session identity. Use `POST /api/update-profile` to modify profile fields such as name, company name, address, and location. Both endpoints derive the user identity from your Bearer token, so no user ID is required in the request.
+
+---
+
+## GET /api/get-profile-details
+
+Retrieve the complete profile of the authenticated user. The response reflects the user associated with the Bearer token you provide — you cannot fetch another user's profile with this endpoint.
+
+**Authentication required** — Bearer token.
+
+### Example Request
+
+```bash
+curl -X GET "https://your-domain.com/api/get-profile-details" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Profile fetched successfully",
+  "data": {
+    "id": 1,
+    "name": "Platform Admin",
+    "email": "admin@example.com",
+    "role": "super_admin",
+    "tenant_id": null,
+    "company_name": null,
+    "gst_in": null,
+    "state": "Maharashtra",
+    "district": "Mumbai",
+    "city": "Mumbai",
+    "address": "123 Finance Street",
+    "pincode": "400001",
+    "active": "active",
+    "created_at": "2024-01-15T10:00:00.000000Z",
+    "updated_at": "2024-05-20T14:30:00.000000Z"
+  }
+}
+```
+
+<ResponseField name="status" type="boolean">
+  `true` when the profile was retrieved successfully.
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Result message — `"Profile fetched successfully"`.
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The full user profile object.
+
+  <Expandable title="data fields">
+    <ResponseField name="data.id" type="integer">
+      Unique user ID.
+    </ResponseField>
+    <ResponseField name="data.name" type="string">
+      Full display name of the user.
+    </ResponseField>
+    <ResponseField name="data.email" type="string">
+      Registered email address.
+    </ResponseField>
+    <ResponseField name="data.role" type="string">
+      User role — one of `super_admin`, `dsa_admin`, `coordinator`, `partner`, or `staff`.
+    </ResponseField>
+    <ResponseField name="data.tenant_id" type="integer | null">
+      The ID of the DSA tenant this user belongs to. Returns `null` for `super_admin` accounts that are not associated with any tenant.
+    </ResponseField>
+    <ResponseField name="data.company_name" type="string | null">
+      Name of the user's company or DSA organization, if set.
+    </ResponseField>
+    <ResponseField name="data.gst_in" type="string | null">
+      GST Identification Number of the organization, if provided.
+    </ResponseField>
+    <ResponseField name="data.state" type="string | null">
+      State component of the user's address.
+    </ResponseField>
+    <ResponseField name="data.district" type="string | null">
+      District component of the user's address.
+    </ResponseField>
+    <ResponseField name="data.city" type="string | null">
+      City component of the user's address.
+    </ResponseField>
+    <ResponseField name="data.address" type="string | null">
+      Street-level address.
+    </ResponseField>
+    <ResponseField name="data.pincode" type="string | null">
+      6-digit postal PIN code.
+    </ResponseField>
+    <ResponseField name="data.active" type="string">
+      Account status — `active` or `inactive`.
+    </ResponseField>
+    <ResponseField name="data.created_at" type="string">
+      ISO 8601 timestamp of account creation.
+    </ResponseField>
+    <ResponseField name="data.updated_at" type="string">
+      ISO 8601 timestamp of the most recent profile update.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="401 — Unauthenticated">
+    ```json
+    {
+      "message": "Unauthenticated."
+    }
+    ```
+    Returned when no valid Bearer token is provided, or the token has expired.
+  </Tab>
+</Tabs>
+
+---
+
+## POST /api/update-profile
+
+Update the profile of the authenticated user. Only include the fields you want to change — omitted fields are left unchanged. The server returns the full updated user object on success.
+
+**Authentication required** — Bearer token.
+
+### Request Body
+
+<ParamField body="name" type="string" required>
+  Updated full name for the user account.
+</ParamField>
+
+<ParamField body="company_name" type="string">
+  Updated company or DSA organization name.
+</ParamField>
+
+<ParamField body="gst_in" type="string">
+  Updated GST Identification Number of the organization.
+</ParamField>
+
+<ParamField body="state" type="string">
+  Updated state for the address. Use values from `GET /api/get-state-district` to ensure consistency.
+</ParamField>
+
+<ParamField body="district" type="string">
+  Updated district for the address.
+</ParamField>
+
+<ParamField body="city" type="string">
+  Updated city for the address.
+</ParamField>
+
+<ParamField body="address" type="string">
+  Updated street-level address.
+</ParamField>
+
+<ParamField body="pincode" type="string">
+  Updated 6-digit postal PIN code.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST "https://your-domain.com/api/update-profile" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "name": "Rahul Sharma",
+    "company_name": "Sharma DSA Associates",
+    "state": "Maharashtra",
+    "district": "Pune",
+    "city": "Pune",
+    "address": "Plot 45, Baner Road",
+    "pincode": "411045"
+  }'
+```
+
+### Success Response — 200
+
+```json
+{
+  "status": true,
+  "message": "Profile fetched successfully",
+  "data": {
+    "id": 1,
+    "name": "Rahul Sharma",
+    "email": "admin@example.com",
+    "role": "super_admin",
+    "tenant_id": null,
+    "company_name": "Sharma DSA Associates",
+    "gst_in": null,
+    "state": "Maharashtra",
+    "district": "Pune",
+    "city": "Pune",
+    "address": "Plot 45, Baner Road",
+    "pincode": "411045",
+    "active": "active",
+    "updated_at": "2024-06-01T11:45:00.000000Z"
+  }
+}
+```
+
+<Tip>
+  You only need to include the fields you want to update — omitted fields remain unchanged. Note that `name` is the only field the server validates as required; all other fields are applied if present.
+</Tip>
+
+### Error Responses
+
+<Tabs>
+  <Tab title="401 — Missing Required Field">
+    ```json
+    {
+      "status": false,
+      "message": "The name field is required.",
+      "data": []
+    }
+    ```
+    Returned when the `name` field is missing from the request body.
+  </Tab>
+  <Tab title="401 — Unauthenticated / Session Expired">
+    ```json
+    {
+      "status": false,
+      "message": "Session expired or something went wrong",
+      "data": []
+    }
+    ```
+    Returned when the token is invalid or the session has expired.
+  </Tab>
+</Tabs>
+
+<Note>
+  Changing your email address or password is not supported through this endpoint. Contact your platform administrator to update login credentials.
+</Note>

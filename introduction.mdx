@@ -1,0 +1,61 @@
+---
+title: "Clikzop Bank EMI: Loan Origination REST API Platform"
+sidebarTitle: "Introduction"
+description: "A multi-tenant REST API platform for DSAs, NBFCs, and banks to manage KYC, CIBIL scores, bank statements, ITR, GST data, and loan origination."
+---
+
+Clikzop Bank EMI is a multi-tenant loan origination platform that gives Direct Selling Agents (DSAs), NBFCs, and partner financial institutions a single REST API surface to manage the complete lending workflow — from customer onboarding and identity verification through credit assessment, financial analysis, and loan application management. Every operation is scoped to your tenant, so your data stays isolated from other organizations on the platform.
+
+## Key Capabilities
+
+<CardGroup cols={2}>
+  <Card title="KYC Verification" icon="id-card" href="/concepts/kyc-verification">
+    Verify customer identity in real time using PAN, Aadhaar, driving licence, and passport. Background court checks and company (CIN) lookups are also supported.
+  </Card>
+  <Card title="CIBIL & Credit" icon="chart-line" href="/guides/cibil-report">
+    Fetch live CIBIL scores, parse uploaded CIBIL PDFs, and store structured account-level trade-line data against each loan application.
+  </Card>
+  <Card title="Bank Statement Analysis" icon="building-columns" href="/guides/bank-statement-analysis">
+    Upload bank statements, initiate digital consent flows, and retrieve month-by-month banking summaries to assess cash-flow eligibility.
+  </Card>
+  <Card title="ITR & GST Data" icon="file-invoice" href="/guides/itr-gst-verification">
+    Pull salaried and business ITR details, retrieve GST registration data via PAN or GSTIN, and capture GST filing history for underwriting.
+  </Card>
+  <Card title="Loan Management" icon="hand-holding-dollar" href="/guides/submit-loan-application">
+    Create and track loan applications, manage co-applicants, upload checklist documents, update loan status, and generate eligibility reports.
+  </Card>
+  <Card title="Webhooks & Integrations" icon="webhook" href="/integrations/webhooks">
+    Receive real-time event callbacks (e.g., CIBIL fetch completion) through the platform webhook endpoint to keep downstream systems in sync.
+  </Card>
+</CardGroup>
+
+## Who Is This For?
+
+**Direct Selling Agents (DSAs)** use the platform to onboard loan applicants, collect KYC documents, run credit checks, and submit loan files to partner lenders — all through a single API or the companion web portal. Each DSA operates as an independent tenant with its own user hierarchy, permissions, and customer data.
+
+**NBFCs and private lenders** integrate the API into their own origination workflows to automate the data-collection and pre-underwriting stages. The role-based permission system lets you grant granular access to your operations teams without exposing sensitive financial data more broadly than needed.
+
+**Partner financial institutions and aggregators** use the multi-tenancy model to white-label the platform for their own DSA networks. A `super_admin` account manages the master catalogue (loan types, income types, document checklists, bank master), while each tenant gets a scoped `dsa_admin` view of its own customers and applications.
+
+## How the API Works
+
+The Clikzop Bank EMI API follows REST conventions. All requests are made over HTTPS to `https://your-domain.com/api`, and every response body uses the same JSON envelope:
+
+```json
+{
+  "status": true,
+  "message": "Success",
+  "data": { ... }
+}
+```
+
+There are four things to keep in mind before you make your first call:
+
+- **Bearer token authentication.** Every protected endpoint requires an `Authorization: Bearer {token}` header. Obtain your token by calling `POST /api/login` (super_admin) or `POST /api/tenant-login` (DSA / tenant users). Tokens expire after 24 hours.
+- **JSON request and response.** Send `Content-Type: application/json` on all `POST` requests and `Accept: application/json` on every request so the API returns JSON error responses instead of HTML.
+- **Role-based access control.** Endpoints are gated by two roles — `super_admin` (full platform access) and `dsa_admin` (tenant-scoped access) — as well as fine-grained permissions such as `create_loan`, `view_loan`, and `view_company_profile`. Calling an endpoint without the required role or permission returns a `403 Forbidden` response.
+- **Multi-tenancy.** Customer records, loan applications, and user accounts are automatically scoped to your `tenant_id`. A `super_admin` can query across all tenants; a `dsa_admin` sees only the data belonging to their own tenant.
+
+<Note>
+  To get started you need an active account on the platform. Contact your Clikzop account manager to receive your credentials, tenant identifier, and base URL for your environment.
+</Note>

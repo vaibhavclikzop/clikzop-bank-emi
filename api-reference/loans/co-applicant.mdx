@@ -1,0 +1,85 @@
+---
+title: "Add Co-Applicants to a Loan Application via the API"
+sidebarTitle: "Co-Applicant"
+description: "POST /api/save-co-applicant — link an existing customer to a loan as a co-applicant or guarantor and include them in the joint income assessment."
+---
+
+Co-applicants allow multiple individuals to be assessed together for a single loan, improving overall eligibility by combining income, reducing the debt-to-income ratio, or adding a guarantor. Each person you add must already have a customer record — create one first with [`POST /api/save-customer-details`](/api-reference/customers/create) if needed. The primary applicant is set automatically when you create the loan; use this endpoint only for co-applicants and guarantors.
+
+---
+
+## Add a co-applicant
+
+Link an existing customer to a loan as a co-applicant. You can call this endpoint multiple times to add multiple co-applicants to the same loan.
+
+**POST** `/api/save-co-applicant`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="loan_id" type="integer" required>
+      The internal ID of the loan to attach the co-applicant to. Use the `id` returned by `POST /api/save-loan`.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      Internal ID of the co-applicant customer. This customer must already exist in your tenant.
+    </ParamField>
+
+    <ParamField body="financial_status" type="string" required>
+      The financial role of this applicant on the loan. Accepted values: `financial` (income considered in assessment), `non_financial` (not included in income calculation).
+    </ParamField>
+
+    <ParamField body="relationship_id" type="integer" required>
+      ID representing the co-applicant's relationship to the primary applicant (e.g., spouse, parent, sibling). Retrieve the full list from `GET /api/get-relationship`.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/save-co-applicant" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "loan_id": 7,
+        "customer_id": 55,
+        "financial_status": "financial",
+        "relationship_id": 2
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="201 Created"
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": []
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Each loan has exactly one primary applicant, set at loan creation time via `POST /api/save-loan`. All subsequent applicants added through this endpoint are co-applicants (`applicant_type: co_applicant`). You cannot reassign the primary applicant after creation.
+</Note>
+
+<Tip>
+  Both primary and co-applicants can have their own ITR, CIBIL, and banking data fetched and linked independently, giving you a complete financial picture for joint assessment.
+</Tip>
+
+---
+
+## Co-applicant workflow
+
+<Steps>
+  <Step title="Create the co-applicant's customer record">
+    If the co-applicant does not yet have a customer profile, call `POST /api/save-customer-details` to register them. Note the returned `id`.
+  </Step>
+  <Step title="Link them to the loan">
+    Call `POST /api/save-co-applicant` with the loan ID, the co-applicant's customer ID, financial status, and relationship ID.
+  </Step>
+  <Step title="Verify their documents">
+    Use the document verification endpoints (`/api/check-pan-card`, `/api/check-aadhar-card`, etc.) with the co-applicant's `customer_id` to complete their KYC.
+  </Step>
+  <Step title="Fetch their financial data">
+    Pull ITR, CIBIL, and banking records independently for the co-applicant using their `customer_id` and the shared `loan_id`.
+  </Step>
+</Steps>

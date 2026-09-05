@@ -1,0 +1,140 @@
+---
+title: "Account Aggregator: Consent-Based Bank Statement Collection"
+sidebarTitle: "Account Aggregator"
+description: "Collect customer bank statements via the RBI-regulated Account Aggregator consent flow for faster credit decisioning on loan applications."
+---
+
+The Account Aggregator (AA) framework lets customers share their bank account data directly with lenders through a secure, consent-based mechanism regulated by the Reserve Bank of India. Clikzop Bank EMI integrates with the Account Aggregator network to automate bank statement collection for loan applications — eliminating manual PDF uploads and reducing turnaround time for credit decisioning.
+
+## How the Consent Flow Works
+
+The AA flow follows a four-step sequence: your backend creates a consent request, the customer approves it through their bank, you check the consent status, and then you fetch the structured statement data.
+
+<Steps>
+  <Step title="Create Consent Request">
+    Call `POST /api/create-banking-consent` to initiate the consent flow. The platform forwards the request to the Account Aggregator service and returns after saving the consent record.
+
+    **Request body:**
+
+    ```json
+    {
+      "loan_id": 1,
+      "from_date": "2023-01-01",
+      "to_date": "2024-01-01"
+    }
+    ```
+
+    The customer's mobile number is resolved automatically from the loan record — you do not need to pass it explicitly.
+
+    **Example request:**
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/create-banking-consent" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 1,
+        "from_date": "2023-01-01",
+        "to_date": "2024-01-01"
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": []
+    }
+    ```
+
+    After a successful response, retrieve the consent record `id` for this loan using your loan management flow, then pass it to the next steps.
+
+    <Tip>
+      Retrieve the consent record associated with your loan to get the customer-facing approval URL. Share this URL via SMS, email, or an in-app redirect so the customer can complete their authorization.
+    </Tip>
+  </Step>
+
+  <Step title="Customer Authorizes">
+    Share the consent approval URL with your customer. The customer opens the link, selects their bank, logs in, and approves the data sharing request. The consent is scoped to the `from_date` and `to_date` range you specified.
+
+    <Tip>
+      If a customer's consent expires, create a new consent request and share the new URL with the customer.
+    </Tip>
+  </Step>
+
+  <Step title="Check Consent Status">
+    Poll `POST /api/check-banking-consent` to determine whether the customer has approved the request. Pass the internal consent record `id`.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-banking-consent" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"id": 7}'
+    ```
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {}
+    }
+    ```
+
+    Possible consent `status` values are described in the table below. Continue polling until the status is `ACTIVE` before proceeding to the next step.
+  </Step>
+
+  <Step title="Fetch Bank Statement">
+    Once the consent status is `ACTIVE`, call `POST /api/get-bank-statement` to retrieve the structured transaction data and persist it to the loan record.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-bank-statement" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"id": 7}'
+    ```
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": []
+    }
+    ```
+
+    The platform fetches all bank accounts linked to the consent, stores each account's profile and transaction history, and computes monthly closing balances at the 5th, 15th, and 25th of each month.
+  </Step>
+</Steps>
+
+## Consent Status Values
+
+| Status | Meaning |
+|---|---|
+| `PENDING` | Awaiting customer action — the customer has not yet approved or declined |
+| `ACTIVE` | Consent granted; transaction data is available to fetch |
+| `REJECTED` | Customer declined the data sharing request |
+| `EXPIRED` | The consent window lapsed before the customer acted |
+
+## Data Available After Consent
+
+Once you call `get-bank-statement` successfully, the following data is stored against the loan and available for credit analysis:
+
+<CardGroup cols={2}>
+  <Card title="Account Profile" icon="user">
+    Account holder name, PAN, mobile, address, branch, IFSC code, MICR code, account type, and current balance.
+  </Card>
+  <Card title="Transaction History" icon="list">
+    Individual debit and credit entries with transaction date, value date, mode (UPI, NEFT, IMPS, etc.), narration, reference number, and running balance.
+  </Card>
+  <Card title="Monthly Closing Balances" icon="chart-line">
+    Closing balance snapshots at the 5th, 15th, and 25th of each month across a 12-month window, used to compute average monthly balance.
+  </Card>
+  <Card title="Debit / Credit Totals" icon="scale-balanced">
+    Per-month debit and credit aggregates, monthly total, and monthly average balance derived from the closing balance snapshots.
+  </Card>
+</CardGroup>
+
+<Note>
+  The Account Aggregator network is regulated by RBI. Customers have full control and can revoke consent at any time through their bank's AA interface.
+</Note>

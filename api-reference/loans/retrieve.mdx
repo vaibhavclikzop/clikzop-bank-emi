@@ -1,0 +1,188 @@
+---
+title: "Retrieve and Filter Loan Applications Using the API"
+sidebarTitle: "Retrieve Loans"
+description: "GET /api/get-loan and GET /api/get-loan-details — list all loans with pagination and optional status filter, or fetch full details for one loan."
+---
+
+Two endpoints cover loan retrieval: a paginated list endpoint for building dashboards and queues, and a detailed single-loan endpoint for constructing full loan detail views. Both require the `view_loan` permission on your role. The list endpoint supports optional status-based filtering so you can segment your pipeline by workflow stage.
+
+<Note>
+  Both endpoints require `Authorization: Bearer {token}` and the `view_loan` permission. Contact your administrator if you receive a `403 Forbidden` response.
+</Note>
+
+---
+
+## List loans with pagination
+
+Fetch a paginated list of all loans in your tenant. Optionally filter by status ID to retrieve only loans in a specific pipeline stage.
+
+**GET** `/api/get-loan/{offset}/{limit}/{statusID?}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="offset" type="integer" required>
+      Zero-based starting index. Use `0` for the first page.
+    </ParamField>
+
+    <ParamField path="limit" type="integer" required>
+      Number of records to return per page. A limit of 10–50 is recommended for responsive UIs.
+    </ParamField>
+
+    <ParamField path="statusID" type="integer">
+      Optional. Filter results to only loans with this status ID. Retrieve valid IDs from `GET /api/get-status`. Omit to return all loans regardless of status.
+    </ParamField>
+  </Tab>
+  <Tab title="Request examples">
+    ```bash title="First 10 loans (all statuses)"
+    curl -X GET "https://your-domain.com/api/get-loan/0/10" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+
+    ```bash title="First 10 loans in status 2 (Document Collection)"
+    curl -X GET "https://your-domain.com/api/get-loan/0/10/2" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+
+    ```bash title="Loans 21–30 (second page with limit 10)"
+    curl -X GET "https://your-domain.com/api/get-loan/20/10" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 7,
+          "loan_number": "LN-5F3A2C001",
+          "loan_amount": "500000.00",
+          "tenure_months": 36,
+          "status_id": 2,
+          "loan_type_id": 2,
+          "customer_id": 42,
+          "created_at": "2024-05-01T10:30:00.000000Z",
+          "customer": {"id": 42, "name": "Priya Sharma"},
+          "status": {"id": 2, "name": "Document Collection"},
+          "loan_type": {"id": 2, "name": "Business Loan"},
+          "income_type": {"id": 1, "name": "Salaried"}
+        },
+        {
+          "id": 8,
+          "loan_number": "LN-9C4B1D002",
+          "loan_amount": "1200000.00",
+          "tenure_months": 120,
+          "status_id": 2,
+          "loan_type_id": 1,
+          "customer_id": 55,
+          "created_at": "2024-05-02T09:00:00.000000Z",
+          "customer": {"id": 55, "name": "Rahul Verma"},
+          "status": {"id": 2, "name": "Document Collection"},
+          "loan_type": {"id": 1, "name": "Home Loan"},
+          "income_type": {"id": 2, "name": "Self Employed"}
+        }
+      ],
+      "pagination": {
+        "total_records": 48,
+        "offset": 0,
+        "limit": 10,
+        "current_page": 1,
+        "total_pages": 5,
+        "has_more": true
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Get full loan details
+
+Retrieve the complete detail record for a single loan by its internal ID. This response includes the loan header, all applicants (primary and co-applicants) with their ITR data, the document checklist upload status, CIBIL records, banking analysis, and GST data.
+
+**GET** `/api/get-loan-details/{id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="id" type="integer" required>
+      The internal loan ID from `POST /api/save-loan` or the list endpoint.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-loan-details/7" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK (abbreviated)"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": {
+        "loadDetails": {
+          "id": 7,
+          "loan_number": "LN-5F3A2C001",
+          "loan_amount": "500000.00",
+          "tenure_months": 36,
+          "loan_purpose": "Business expansion",
+          "status_id": 2,
+          "kyc_verified": null,
+          "created_at": "2024-05-01T10:30:00.000000Z",
+          "status": {"id": 2, "name": "Document Collection"},
+          "loan_type": {"id": 2, "name": "Business Loan"},
+          "income_type": {"id": 1, "name": "Salaried"},
+          "loan_applicants": [
+            {
+              "id": 1,
+              "loan_id": 7,
+              "customer_id": 42,
+              "applicant_type": "applicant",
+              "financial_status": "financial",
+              "is_primary": 1,
+              "applicant_details": {
+                "id": 42,
+                "name": "Priya Sharma",
+                "masked_number": "98765*****",
+                "pan_masked": "ABCXX1234F"
+              },
+              "itr_details": null
+            }
+          ]
+        }
+      }
+    }
+    ```
+
+    <Expandable title="Response fields">
+      <ResponseField name="data.loadDetails.id" type="integer">
+        Internal loan ID.
+      </ResponseField>
+      <ResponseField name="data.loadDetails.loan_number" type="string">
+        Human-readable loan reference.
+      </ResponseField>
+      <ResponseField name="data.loadDetails.status" type="object">
+        Current loan status — `id` and `name`.
+      </ResponseField>
+      <ResponseField name="data.loadDetails.loan_type" type="object">
+        Loan product — `id` and `name`.
+      </ResponseField>
+      <ResponseField name="data.loadDetails.income_type" type="object">
+        Income category — `id` and `name`.
+      </ResponseField>
+      <ResponseField name="data.loadDetails.loan_applicants" type="array">
+        All applicants on the loan. Each entry includes `applicant_type` (`applicant` or `co_applicant`), `is_primary`, the applicant's masked customer details, and nested ITR data if available.
+      </ResponseField>
+    </Expandable>
+  </Tab>
+</Tabs>
+
+<Tip>
+  Use `GET /api/get-loan-details` as your primary endpoint for building loan detail views. It bundles applicant profiles, ITR status, and loan metadata in a single call, so you avoid multiple round-trips.
+</Tip>

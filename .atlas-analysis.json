@@ -1,0 +1,159 @@
+{
+  "projectType": "saas",
+  "projectName": "Clikzop Bank EMI",
+  "projectDescription": "A multi-tenant loan origination and processing platform that enables DSAs and financial institutions to manage customer KYC, credit assessment, bank statement analysis, and loan applications end-to-end.",
+  "theme": "almond",
+  "primaryColor": "#fc4539",
+  "lightColor": "#fca9a2",
+  "darkColor": "#040404",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/tenants-and-roles",
+              "concepts/loan-lifecycle",
+              "concepts/kyc-verification",
+              "concepts/credit-assessment"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/onboard-customer",
+              "guides/submit-loan-application",
+              "guides/bank-statement-analysis",
+              "guides/cibil-report",
+              "guides/itr-gst-verification"
+            ]
+          },
+          {
+            "group": "Webhooks & Integrations",
+            "pages": [
+              "integrations/webhooks",
+              "integrations/karza",
+              "integrations/account-aggregator"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/overview",
+              "api-reference/errors"
+            ]
+          },
+          {
+            "group": "Auth & Users",
+            "pages": [
+              "api-reference/auth/login",
+              "api-reference/auth/otp",
+              "api-reference/auth/profile",
+              "api-reference/users/manage"
+            ]
+          },
+          {
+            "group": "Customers",
+            "pages": [
+              "api-reference/customers/create",
+              "api-reference/customers/retrieve",
+              "api-reference/customers/bank-accounts",
+              "api-reference/customers/documents"
+            ]
+          },
+          {
+            "group": "Loans",
+            "pages": [
+              "api-reference/loans/create",
+              "api-reference/loans/retrieve",
+              "api-reference/loans/co-applicant",
+              "api-reference/loans/checklist"
+            ]
+          },
+          {
+            "group": "Credit & Financials",
+            "pages": [
+              "api-reference/credit/cibil",
+              "api-reference/credit/banking",
+              "api-reference/credit/itr",
+              "api-reference/credit/gst",
+              "api-reference/credit/eligibility"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Multi-tenant loan origination platform for DSAs and financial institutions",
+    "End-to-end KYC verification (Aadhaar, PAN, Driving License, Passport)",
+    "Automated CIBIL score retrieval and AI-powered report parsing",
+    "Bank statement upload and analysis via Account Aggregator (Setu) and Perfios",
+    "GST return and ITR (salaried & business) data retrieval",
+    "Loan eligibility calculation with Vanilla Report scoring engine",
+    "Role-based access control with granular permissions",
+    "Karza webhook integration for real-time event processing",
+    "Co-applicant support on loan applications",
+    "Encrypted PII storage with masked data accessors"
+  ],
+  "publicApiSurface": [
+    "POST /api/login",
+    "POST /api/tenant-login",
+    "POST /api/send-otp",
+    "POST /api/verify-otp",
+    "GET /api/get-profile-details",
+    "POST /api/update-profile",
+    "POST /api/save-customer",
+    "POST /api/save-customer-details",
+    "GET /api/get-customers/{offset}/{limit}",
+    "GET /api/get-customer-details/{id}",
+    "GET /api/get-customer-loan/{customer_id}",
+    "POST /api/save-customer-bank",
+    "GET /api/get-customer-bank/{id}",
+    "POST /api/check-ifsc-code",
+    "POST /api/save-loan",
+    "GET /api/get-loan/{offset}/{limit}/{statusID?}",
+    "GET /api/get-loan-details/{id}",
+    "POST /api/save-co-applicant",
+    "GET /api/get-loan-check-list/{id}",
+    "POST /api/upload-check-list-document",
+    "POST /api/upload-cibil-pdf",
+    "POST /api/get-cibil-data",
+    "POST /api/save-cibil-data",
+    "POST /api/save-banking",
+    "POST /api/upload-bank-statement",
+    "POST /api/create-banking-consent",
+    "POST /api/check-banking-consent",
+    "POST /api/get-bank-statement",
+    "POST /api/initiate-bank-statement",
+    "POST /api/get-salaried-itr-details",
+    "POST /api/get-business-itr-details",
+    "POST /api/send-otp-for-gst-filling",
+    "POST /api/verify-otp-for-gst-filling",
+    "POST /api/get-gst-details-by-gstin",
+    "POST /api/get-gst-details-via-pan",
+    "POST /api/generate-bank-eligibility",
+    "POST /api/check-aadhar-card",
+    "POST /api/check-pan-card",
+    "POST /api/check-driving-license",
+    "POST /api/check-passport",
+    "POST /api/get-company-details",
+    "POST /api/check-background-verification",
+    "ANY /api/webhook/karza-webhook"
+  ]
+}

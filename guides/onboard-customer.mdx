@@ -1,0 +1,350 @@
+---
+title: "Onboard a New Customer in Clikzop Bank EMI: A Guide"
+sidebarTitle: "Onboard Customer"
+description: "Step-by-step guide to creating a customer profile, verifying mobile via OTP, completing identity KYC, and linking a bank account in Clikzop Bank EMI."
+---
+
+Before any loan application can begin, you must create a verified customer record in Clikzop Bank EMI. This guide walks you through every step — from checking whether a mobile number already exists in the system, through OTP verification, profile creation, identity document verification, and finally linking a validated bank account to the customer.
+
+<Note>
+  Customer mobile numbers must be valid Indian 10-digit numbers. Use `number` when calling customer management endpoints (e.g. `check-mobile-number`, `save-customer`). Use `mobile` when calling OTP endpoints (`send-otp`).
+</Note>
+
+<Steps>
+
+  <Step title="Check Mobile Number">
+    Before creating a customer, verify the mobile number is not already registered in your tenant.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-mobile-number" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"number": "9876543210"}'
+    ```
+
+    If the number is not registered, the API returns a `404` with `"No Customer Found"`. If it already exists, it returns the customer record. Only proceed to the next step when you receive the `404` response.
+
+    ```json
+    {
+      "status": false,
+      "message": "No Customer Found",
+      "data": []
+    }
+    ```
+  </Step>
+
+  <Step title="Send OTP">
+    Send a one-time password to the customer's mobile number to begin verification. The response includes a `verification_id` that you must store and pass to the next step.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/send-otp" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"mobile": "9876543210", "purpose": "register"}'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "OTP sent successfully.",
+      "data": {
+        "verification_id": "550e8400-e29b-41d4-a716-446655440000",
+        "expires_at": "2024-06-01T10:35:00.000000Z"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Verify OTP">
+    Submit the OTP entered by the customer along with the `verification_id` returned in the previous step to confirm ownership of the mobile number.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/verify-otp" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"verification_id": "550e8400-e29b-41d4-a716-446655440000", "otp": "123456"}'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "OTP verified successfully."
+    }
+    ```
+  </Step>
+
+  <Step title="Create Customer Profile">
+    Create the primary customer record. This call also creates the first loan against the customer and initialises the document checklist automatically.
+
+    <ParamField body="name" type="string" required>
+      Full legal name of the customer.
+    </ParamField>
+
+    <ParamField body="number" type="string" required>
+      10-digit Indian mobile number. Must be unique across the tenant.
+    </ParamField>
+
+    <ParamField body="email" type="string" required>
+      Valid email address.
+    </ParamField>
+
+    <ParamField body="dob" type="string" required>
+      Date of birth in `YYYY-MM-DD` format.
+    </ParamField>
+
+    <ParamField body="pan_no" type="string" required>
+      10-character PAN number (e.g., `ABCDE1234F`).
+    </ParamField>
+
+    <ParamField body="signup_document_type" type="string" required>
+      Identity document type used at sign-up. Accepted values: `aadhaar`, `pan`, `driving_license`, `voter_id`, `passport`.
+    </ParamField>
+
+    <ParamField body="signup_document" type="string" required>
+      The document number for the chosen `signup_document_type`.
+    </ParamField>
+
+    <ParamField body="loan_type_id" type="integer" required>
+      ID of the loan type. Retrieve available IDs from `GET /api/get-loan-type`.
+    </ParamField>
+
+    <ParamField body="loan_amount" type="number" required>
+      Requested loan amount in INR.
+    </ParamField>
+
+    <ParamField body="tenure" type="integer" required>
+      Repayment tenure in months.
+    </ParamField>
+
+    <ParamField body="address" type="string">
+      Full residential address.
+    </ParamField>
+
+    <ParamField body="city" type="string">
+      City of residence.
+    </ParamField>
+
+    <ParamField body="state" type="string">
+      State of residence.
+    </ParamField>
+
+    <ParamField body="district" type="string">
+      District of residence.
+    </ParamField>
+
+    <ParamField body="pincode" type="string">
+      6-digit postal code.
+    </ParamField>
+
+    <ParamField body="country" type="string">
+      Country (defaults to `India`).
+    </ParamField>
+
+    <ParamField body="income_type_id" type="integer">
+      ID of the income type (salaried, self-employed, etc.). Determines which document checklist is assigned.
+    </ParamField>
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-customer" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Rahul Sharma",
+        "number": "9876543210",
+        "email": "rahul.sharma@example.com",
+        "dob": "1990-05-15",
+        "pan_no": "ABCDE1234F",
+        "signup_document_type": "pan",
+        "signup_document": "ABCDE1234F",
+        "loan_type_id": 1,
+        "loan_amount": 500000,
+        "tenure": 24,
+        "address": "42, MG Road",
+        "city": "Pune",
+        "state": "Maharashtra",
+        "pincode": "411001"
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Customer created successfully",
+      "data": {
+        "id": 42,
+        "name": "Rahul Sharma",
+        "number": "9876543210",
+        "email": "rahul.sharma@example.com",
+        "dob": "1990-05-15",
+        "pan_no": "ABCDE1234F",
+        "tenant_id": 3,
+        "created_at": "2024-06-01T10:30:00.000000Z"
+      }
+    }
+    ```
+
+    <Note>
+      `save-customer` creates both the customer record **and** an initial loan in a single transaction. Use the returned customer `id` in all subsequent calls.
+    </Note>
+  </Step>
+
+  <Step title="Add Customer Details (Standalone)">
+    If you need to create a customer profile without simultaneously creating a loan — for example, when pre-registering applicants — use the `save-customer-details` endpoint. It accepts the same fields as `save-customer` but does not require `loan_type_id`, `loan_amount`, `tenure`, or `email`.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-customer-details" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "Priya Nair",
+        "number": "9123456780",
+        "dob": "1995-08-22",
+        "pan_no": "PQRST5678G",
+        "signup_document_type": "aadhaar",
+        "signup_document": "123456789012"
+      }'
+    ```
+  </Step>
+
+  <Step title="Verify Identity Documents">
+    Verify the customer's identity documents against government databases. Call the appropriate endpoint based on the document type.
+
+    <Tabs>
+      <Tab title="PAN Card">
+        ```bash
+        curl -X POST "https://your-domain.com/api/check-pan-card" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "pan_card_no": "ABCDE1234F",
+            "customer_id": 42,
+            "document_id": 2,
+            "id": 15
+          }'
+        ```
+
+        The `id` field is the customer document record ID from the document checklist. The `document_id` is the document type master ID.
+      </Tab>
+      <Tab title="Aadhaar">
+        ```bash
+        curl -X POST "https://your-domain.com/api/check-aadhar-card" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "aadhar_card_no": "123456789012",
+            "customer_id": 42,
+            "document_id": 1,
+            "id": 14,
+            "lat": "18.5204",
+            "long": "73.8567"
+          }'
+        ```
+
+        Aadhaar verification requires the agent's GPS coordinates (`lat`, `long`) for compliance logging.
+      </Tab>
+      <Tab title="Driving License">
+        ```bash
+        curl -X POST "https://your-domain.com/api/check-driving-license" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "driving_license_no": "MH1220210012345",
+            "customer_id": 42,
+            "document_id": 3,
+            "id": 16,
+            "dob": "1990-05-15"
+          }'
+        ```
+      </Tab>
+      <Tab title="Passport">
+        ```bash
+        curl -X POST "https://your-domain.com/api/check-passport" \
+          -H "Authorization: Bearer {your_token}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "file_no": "A1234567",
+            "customer_id": 42,
+            "document_id": 4,
+            "id": 17,
+            "dob": "1990-05-15"
+          }'
+        ```
+      </Tab>
+    </Tabs>
+
+    A successful verification marks the document as verified on the customer's document record and stores address details extracted from the government response.
+  </Step>
+
+  <Step title="Add and Validate Bank Account">
+    Before saving the bank account, validate the IFSC code to ensure it maps to a known branch in the platform's master list.
+
+    **Step 6a — Validate IFSC:**
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-ifsc-code" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{"ifsc_code": "HDFC0001234"}'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": {
+        "id": 88,
+        "ifsc": "HDFC0001234",
+        "bank_name": "HDFC Bank",
+        "branch": "Pune Main Branch",
+        "city": "Pune",
+        "state": "Maharashtra"
+      }
+    }
+    ```
+
+    **Step 6b — Save Bank Account:**
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-customer-bank" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": 42,
+        "account_number": "1234567890",
+        "ifsc_code": "HDFC0001234",
+        "bank_id": 5
+      }'
+    ```
+
+    The platform performs a live penny-drop verification via the bank service. On success, the account holder name is captured from the bank's response.
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Bank account saved successfully",
+      "data": {
+        "accountName": "RAHUL SHARMA",
+        "accountNumber": "1234567890",
+        "ifsc": "HDFC0001234",
+        "isValid": true,
+        "statusCode": "SUCCESS"
+      }
+    }
+    ```
+  </Step>
+
+</Steps>
+
+<Tip>
+  Use `GET /api/get-customer-details/{id}` to retrieve the full customer profile after onboarding — including verified documents, bank accounts, and linked company details.
+</Tip>

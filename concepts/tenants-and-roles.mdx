@@ -1,0 +1,138 @@
+---
+title: "Multi-Tenancy and Role-Based Access in Clikzop Bank EMI"
+sidebarTitle: "Tenants & Roles"
+description: "Understand how Clikzop Bank EMI separates partner organizations into isolated tenants and controls access with roles and granular permissions."
+---
+
+Clikzop Bank EMI is a multi-tenant platform, meaning every DSA (Direct Selling Agent) organization operates inside its own isolated workspace called a **tenant**. Within each tenant, access to features and data is governed by roles and fine-grained permissions — so every team member sees exactly what they need and nothing more. This page explains how tenants, roles, and permissions work together and what they mean for your day-to-day usage.
+
+## Tenants (Partner Organizations)
+
+A tenant represents a single DSA or financial institution onboarded onto the Clikzop Bank EMI platform. The platform administrator creates your organization as a partner and provisions your tenant. Once onboarded, **all your data is completely scoped to your tenant** — customers, loans, users, and documents belonging to your organization are never visible to another tenant.
+
+You authenticate as a tenant user through the dedicated tenant login endpoint:
+
+```bash
+POST https://your-domain.com/api/tenant-login
+```
+
+```json
+{
+  "email": "admin@yourdsa.com",
+  "password": "your_password"
+}
+```
+
+The response returns a bearer token scoped to your tenant. Pass this token in every subsequent request:
+
+```bash
+Authorization: Bearer {your_token}
+```
+
+<Note>
+  If you log in using `POST /api/login` instead of `POST /api/tenant-login`, you authenticate as a super-admin platform user, not as a tenant user. Use the tenant login endpoint for all DSA operations.
+</Note>
+
+## Roles
+
+The platform defines two primary roles that govern what a user can do.
+
+<CardGroup cols={2}>
+  <Card title="super_admin" icon="crown">
+    A platform-level administrator role. Super admins operate outside any tenant and manage the entire platform. They can:
+    - Onboard and manage partner organizations via `POST /api/create-partner`
+    - Manage master data: banks, loan types, income types, plans, territories, documents, and account types
+    - Fetch and view CIBIL scores via `POST /api/fetch-cibil-score`
+    - Access all platform-wide settings and dashboards
+  </Card>
+  <Card title="dsa_admin" icon="building">
+    A tenant-scoped administrator role for DSA organizations. DSA admins operate entirely within their tenant and can:
+    - Manage customers and loan applications within their organization
+    - View their company profile via `GET /api/tenant/get-company-profile`
+    - Access the tenant dashboard via `POST /api/tenant-dashboard`
+    - Manage users and assign roles within their tenant
+  </Card>
+</CardGroup>
+
+Beyond these two top-level roles, the platform also supports sub-roles in a hierarchical structure:
+
+| Role | Reports To | Scope |
+|------|-----------|-------|
+| `super_admin` | — | Platform-wide |
+| `coordinator` | `super_admin` | Platform-wide (super admin context) |
+| `staff` | `coordinator` | Platform-wide (super admin context) |
+| `dsa_admin` | — | Tenant-scoped |
+| `coordinator` | `dsa_admin` | Tenant-scoped |
+| `staff` | `coordinator` | Tenant-scoped |
+
+Use `POST /api/get-role-base-manager` to retrieve users eligible to be assigned as manager for a given role:
+
+```bash
+curl -X POST "https://your-domain.com/api/get-role-base-manager" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{"role": "staff"}'
+```
+
+## Permissions
+
+Roles define a user's broad level of access. Permissions go further by controlling individual API actions within each role. Permissions are assigned to roles using `POST /api/save-role-permission` and can be retrieved at any time with `GET /api/get-all-permissions`.
+
+The table below shows key permissions and the actions they unlock:
+
+| Permission | What It Unlocks |
+|---|---|
+| `view_loan` | `GET /api/get-loan/{offset}/{limit}` and `GET /api/get-loan-details/{id}` |
+| `create_loan` | `POST /api/save-loan` — create new loan applications |
+| `view_company_profile` | `GET /api/tenant/get-company-profile` — read the tenant's company profile |
+
+To assign a set of permissions to one or more roles, send a request like this:
+
+```bash
+curl -X POST "https://your-domain.com/api/save-role-permission" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "roles": [
+      {
+        "role_id": 2,
+        "permission_ids": [1, 2, 3]
+      }
+    ]
+  }'
+```
+
+To list all available roles (with their currently assigned permissions), call:
+
+```bash
+curl -X GET "https://your-domain.com/api/get-roles" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+<Note>
+  Contact your account manager to adjust role permissions for your team. Only authorized administrators can modify role-to-permission mappings for a tenant.
+</Note>
+
+## Territory Management
+
+Loans, users, and operations can be scoped to geographic territories representing a combination of state, district, and city. Your platform administrator creates territories via `POST /api/save-territories` and assigns them to your account.
+
+When you create or update a user, provide the territory fields to restrict that user's operational scope:
+
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@yourdsa.com",
+  "role": "staff",
+  "state": "Maharashtra",
+  "district": "Pune",
+  "city": "Hadapsar"
+}
+```
+
+Use `GET /api/get-state-district/{district?}` to retrieve the list of valid state/district combinations available on the platform, and `GET /api/get-territories` (super admin only) to view all configured territories.
+
+<Tip>
+  When building user management features, always call `GET /api/get-state-district` first to populate your state and district dropdowns with valid platform values.
+</Tip>

@@ -1,0 +1,233 @@
+---
+title: "Loan Application Lifecycle: End-to-End Origination Guide"
+sidebarTitle: "Loan Lifecycle"
+description: "Follow a loan from creation through KYC, credit checks, document upload, and eligibility reporting to understand the full origination flow."
+---
+
+Every loan on Clikzop Bank EMI moves through a defined sequence of stages — from the first moment a customer is registered to the final eligibility decision. Understanding this lifecycle helps you integrate the right APIs at the right time, avoid missing required steps, and build a smooth experience for your customers. The sections below walk through each stage in order.
+
+## Origination Stages
+
+<Steps>
+  <Step title="Customer Onboarding">
+    Before creating a loan, you must have a registered customer record. Check whether the customer's mobile number already exists in the system, then create or update their profile.
+
+    ```bash
+    # 1. Check if mobile number is already registered
+    POST /api/check-mobile-number
+    {"number": "9876543210"}
+
+    # 2. Send an OTP to verify the mobile
+    POST /api/send-otp
+    {"number": "9876543210"}
+
+    # 3. Verify the OTP
+    POST /api/verify-otp
+    {"number": "9876543210", "otp": "123456"}
+
+    # 4. Create the customer record
+    POST /api/save-customer
+    ```
+
+    Once the customer is created, save their detailed profile (address, DOB, income details) with `POST /api/save-customer-details`.
+  </Step>
+
+  <Step title="Identity Verification (KYC)">
+    Verify the customer's identity documents before creating a loan. The platform supports PAN, Aadhaar, Driving License, and Passport verification through automated third-party checks.
+
+    ```bash
+    POST /api/check-pan-card
+    POST /api/check-aadhar-card
+    POST /api/check-driving-license
+    POST /api/check-passport
+    ```
+
+    For business loan applicants, also verify company identity and GST registration:
+
+    ```bash
+    POST /api/get-company-details   # CIN-based company lookup
+    POST /api/get-gst-details-via-pan
+    POST /api/get-gst-details-by-gstin
+    ```
+
+    After verification, the customer's `pan_verified` and `adhar_verified` flags are updated automatically. Check the current verification status at any time with `GET /api/get-customer-details/{id}`.
+  </Step>
+
+  <Step title="Loan Application Created">
+    Create the loan application by providing the customer reference, loan type, income type, requested amount, and tenure. This requires the `create_loan` permission.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-loan" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_type_id": 1,
+        "income_type_id": 2,
+        "loan_amount": 500000,
+        "tenure": 60,
+        "loan_purpose": "Home renovation"
+      }'
+    ```
+
+    The platform automatically assigns a unique loan number (see [Loan Number Format](#loan-number-format)) and populates the document checklist based on the income type you select.
+  </Step>
+
+  <Step title="Document Checklist">
+    Retrieve the auto-generated document checklist for the loan and upload each required document.
+
+    ```bash
+    # Retrieve checklist
+    GET /api/get-loan-check-list/{id}
+
+    # Upload a document against a checklist item
+    POST /api/upload-check-list-document
+
+    # View all uploaded documents
+    GET /api/get-uploaded-document/{id}
+    ```
+
+    The checklist is pre-populated with both common documents (applicable to all loan types) and income-type-specific documents. To upload a file, send a `multipart/form-data` request with `loan_id`, `loan_document_id` (the checklist entry ID from the checklist response), and the `file` field (PDF, JPG, JPEG, or PNG, max 5 MB).
+  </Step>
+
+  <Step title="CIBIL / Credit Assessment">
+    Fetch the applicant's live credit report from CIBIL using the customer's mobile number, PAN, and full name stored on the loan record. Alternatively, upload an existing CIBIL PDF.
+
+    ```bash
+    # Fetch live CIBIL report via API
+    POST /api/get-cibil-data
+    {"loan_id": 7}
+
+    # OR upload an existing CIBIL PDF
+    POST /api/upload-cibil-pdf
+    # multipart/form-data: loan_id + pdf file
+    ```
+
+    Key fields extracted and stored: `cibil_score`, `obligate_amount` (sum of all active EMIs), `currentCredit`, `creditUsed`, `OnTimePaymentHistory`, `Inquires`, and full tradeline accounts.
+  </Step>
+
+  <Step title="Bank Statement Analysis">
+    Analyse the applicant's bank account activity using either a PDF upload or the Account Aggregator (AA) consent flow.
+
+    ```bash
+    # PDF upload method
+    POST /api/upload-bank-statement     # Upload the PDF
+    POST /api/save-banking-amount       # Record monthly closing balance figures
+
+    # Account Aggregator method
+    POST /api/create-banking-consent    # Create consent link (requires from_date, to_date)
+    POST /api/check-banking-consent     # Poll until consent is ACTIVE
+    POST /api/get-bank-statement        # Fetch and store transaction data
+    ```
+
+    The platform computes closing balances at the 5th, 15th, 20th, 25th, and 30th of each month, plus monthly totals and averages.
+  </Step>
+
+  <Step title="ITR / GST Verification">
+    Pull income tax return data for salaried or business applicants, and record GST turnover figures.
+
+    ```bash
+    # ITR data
+    POST /api/get-salaried-itr-details
+    POST /api/get-business-itr-details
+
+    # GST turnover (save a running year, then record monthly amounts)
+    POST /api/save-gst-running-year
+    POST /api/save-gst-running-year-amount
+
+    # GST filing via TRN (OTP-based)
+    POST /api/send-otp-for-gst-filling
+    POST /api/verify-otp-for-gst-filling
+    ```
+  </Step>
+
+  <Step title="Eligibility Report (Vanilla Report)">
+    Once all financial data is collected, generate the Vanilla Report to compute the applicant's maximum eligible EMI, loan amount, FOIR, and LTV.
+
+    ```bash
+    # Save financial year data
+    POST /api/save-vanilla-year
+
+    # Update individual field values and eligibility percentages
+    POST /api/update-vanilla-values
+
+    # Update summary figures (FOIR, LTV, interest rate, tenor)
+    POST /api/update-vanilla-summary
+
+    # Generate the bank eligibility report
+    POST /api/generate-bank-eligibility
+    {"loan_id": 7}
+    ```
+  </Step>
+
+  <Step title="Status Tracking">
+    Loan status moves through a series of ordered steps managed by the platform. Retrieve all available statuses and their ordering with:
+
+    ```bash
+    GET /api/get-status
+    ```
+
+    Each status record includes a `step_order` field that defines the sequence. Use this to display pipeline progress in your UI or trigger downstream workflows.
+  </Step>
+</Steps>
+
+## Loan Number Format
+
+When you call `POST /api/save-loan`, the platform auto-generates a unique loan reference number. The format uses the `LN-` prefix followed by a unique identifier string:
+
+```text
+LN-XXXXXXXXXXXXXXXX
+```
+
+For example: `LN-686D3A2F4E1C7`. Store this `loan_number` from the response — you will reference it in all communications with the customer and lender.
+
+<Note>
+  The loan number is generated at creation time and cannot be changed afterwards. It is distinct from the numeric `id` field, which is used in API path parameters.
+</Note>
+
+## Co-Applicants
+
+A single loan application can include multiple applicants. The customer who created the application is automatically set as the primary applicant (`is_primary: 1`, `applicant_type: "applicant"`). Add co-applicants with:
+
+```bash
+curl -X POST "https://your-domain.com/api/save-co-applicant" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "loan_id": 7,
+    "customer_id": 55,
+    "financial_status": "financial",
+    "relationship_id": 3
+  }'
+```
+
+| Field | Description |
+|---|---|
+| `loan_id` | The ID of the loan to attach the co-applicant to |
+| `customer_id` | The ID of the co-applicant's customer record (must already exist) |
+| `financial_status` | Whether this person is a `financial` or `non_financial` co-applicant |
+| `relationship_id` | The relationship to the primary applicant — use `GET /api/get-relationship` to fetch valid IDs |
+
+Co-applicants are stored with `applicant_type: "co_applicant"` and `is_primary: 0`. Their KYC and financial data should be captured against their own customer record and linked to the same loan.
+
+## Loan Status
+
+Loan applications are tagged with a `status_id` that maps to an ordered status definition. Retrieve the complete list of statuses and their sequence with:
+
+```bash
+curl -X GET "https://your-domain.com/api/get-status" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+The response includes each status name and its `step_order` value so you can render a progress indicator or filter the loan list by pipeline stage.
+
+To filter loans by a specific status when listing, pass the optional `statusID` parameter:
+
+```bash
+GET /api/get-loan/{offset}/{limit}/{statusID}
+```
+
+<Tip>
+  You can retrieve the full loan details at any time using `GET /api/get-loan-details/{id}`. This returns the customer, loan type, income type, current status, all applicants, and linked documents in a single response.
+</Tip>

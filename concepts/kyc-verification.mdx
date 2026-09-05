@@ -1,0 +1,261 @@
+---
+title: "KYC Identity Verification in Clikzop Bank EMI Explained"
+sidebarTitle: "KYC Verification"
+description: "Learn which identity documents Clikzop Bank EMI can verify, how verification works, and how results are stored against a customer profile."
+---
+
+Clikzop Bank EMI automates Know Your Customer (KYC) compliance through real-time integrations with third-party verification providers. Instead of manually reviewing scanned copies, you submit a document number through the API, and the platform instantly queries the authoritative source, stores the verified data against the customer record, and updates the customer's verification flags. This page covers every supported document type, how the verification flow works end-to-end, and how to check the results.
+
+<Note>
+  All PII (PAN, Aadhaar, bank account numbers) is stored encrypted. Retrieval endpoints return masked values by default — for example, a PAN of `ABCDE1234F` is returned as `XXXXXX234F`. Only the last four characters are stored unencrypted for display and audit purposes.
+</Note>
+
+## Supported Document Types
+
+| Document | Endpoint | Key Input Field | Additional Required Fields |
+|---|---|---|---|
+| PAN Card | `POST /api/check-pan-card` | `pan_card_no` | `customer_id`, `document_id`, `id` |
+| Aadhaar Card | `POST /api/check-aadhar-card` | `aadhar_card_no` (12 digits) | `customer_id`, `document_id`, `id`, `lat`, `long` |
+| Driving License | `POST /api/check-driving-license` | `driving_license_no` | `customer_id`, `document_id`, `id`, `dob` |
+| Passport | `POST /api/check-passport` | `file_no` | `customer_id`, `document_id`, `id`, `dob` |
+| Company (CIN) | `POST /api/get-company-details` | `cin_no` | `customer_id` |
+
+<Info>
+  The `id` field in Aadhaar, PAN, DL, and Passport requests refers to the document record ID — not the customer ID. Create the document record first, then pass its ID when triggering verification.
+</Info>
+
+## How Verification Works
+
+When you call a verification endpoint, the platform sends the document number to a third-party identity provider, parses the response, and writes the result directly to the customer's document record. Here is the complete flow for a PAN verification:
+
+<Steps>
+  <Step title="Submit the document number">
+    Call `POST /api/check-pan-card` with the PAN number, customer ID, and document record ID:
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-pan-card" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "pan_card_no": "ABCDE1234F",
+        "customer_id": 42,
+        "document_id": 5,
+        "id": 18
+      }'
+    ```
+  </Step>
+
+  <Step title="Platform queries the verification provider">
+    The platform forwards the document number to our verification provider. The same pattern applies for Aadhaar, driving licence, passport, and CIN verifications.
+  </Step>
+
+  <Step title="Result is written to the document record">
+    On success, the platform updates the document record with the verified address, state, city, pincode, and sets `is_verified: 1` with a `verified_at` timestamp.
+
+    **Example success response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 18,
+        "customer_id": 42,
+        "document_no_last4": "234F",
+        "country": "India",
+        "state": "Maharashtra",
+        "city": "Pune",
+        "address": "123 MG Road, Pune",
+        "pincode": "411001",
+        "is_verified": 1,
+        "verified_at": "2024-06-01T10:30:00.000000Z"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Customer verification flags are updated">
+    For Aadhaar verifications, the customer's `adhar_verified` field is automatically set to `1`. For PAN, the document record is updated but you should separately confirm the customer's pan details are captured on the customer record via `POST /api/save-customer-details`.
+  </Step>
+</Steps>
+
+### Aadhaar Verification
+
+Aadhaar verification requires the customer's GPS coordinates (latitude and longitude) in addition to the 12-digit Aadhaar number, as required by the verification provider:
+
+```bash
+curl -X POST "https://your-domain.com/api/check-aadhar-card" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "aadhar_card_no": "123456789012",
+    "customer_id": 42,
+    "document_id": 5,
+    "id": 19,
+    "lat": "18.5204",
+    "long": "73.8567"
+  }'
+```
+
+### Driving License Verification
+
+Pass the license number and the customer's date of birth (used to match the DL record):
+
+```bash
+curl -X POST "https://your-domain.com/api/check-driving-license" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "driving_license_no": "MH1220230012345",
+    "customer_id": 42,
+    "document_id": 5,
+    "id": 20,
+    "dob": "1990-05-15"
+  }'
+```
+
+### Passport Verification
+
+Use `file_no` (the passport file number) along with the customer's date of birth:
+
+```bash
+curl -X POST "https://your-domain.com/api/check-passport" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_no": "A1234567",
+    "customer_id": 42,
+    "document_id": 5,
+    "id": 21,
+    "dob": "1990-05-15"
+  }'
+```
+
+## Document Status on Customer Profile
+
+After any verification call, retrieve the customer record to inspect the current verification state:
+
+```bash
+curl -X GET "https://your-domain.com/api/get-customer-details/42" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+Key fields to check in the response:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `pan_verified` | `0` or `1` | Whether the customer's PAN has been verified |
+| `adhar_verified` | `0` or `1` | Whether Aadhaar verification succeeded |
+| `pan_masked` | string | Masked PAN, e.g. `XXXXXX234F` |
+| `aadhar_masked` | string | Masked Aadhaar, e.g. `XXXXXXXX9012` |
+| `dl_masked` | string | Masked driving license number |
+| `passport_masked` | string | Masked passport file number |
+
+You can also call `POST /api/check-document-verification` to perform a bulk document verification status check across all documents linked to a customer.
+
+## Company & GST Verification
+
+For business loan applicants, verify the company entity and its GST registrations before proceeding to credit assessment.
+
+<Accordion title="Company (CIN) Verification">
+  Submit the Corporate Identification Number to retrieve full company details including directors, registered address, paid-up capital, and date of incorporation:
+
+  ```bash
+  curl -X POST "https://your-domain.com/api/get-company-details" \
+    -H "Authorization: Bearer {your_token}" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "cin_no": "U74999MH2015PTC123456",
+      "customer_id": 42
+    }'
+  ```
+
+  On success, the platform creates a company details record and separate director records for each director listed on the CIN.
+
+  <Warning>
+    Each CIN can only be registered once. Submitting a CIN that already exists in the system returns a validation error. Use the existing company record's ID for subsequent operations.
+  </Warning>
+</Accordion>
+
+<Accordion title="GST Verification via PAN">
+  Retrieve all GST registrations associated with a company's PAN, including master data and filing history:
+
+  ```bash
+  curl -X POST "https://your-domain.com/api/get-gst-details-via-pan" \
+    -H "Authorization: Bearer {your_token}" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "pan_no": "AABCU9603R",
+      "customer_id": 42,
+      "company_id": 8
+    }'
+  ```
+
+  The response stores GST registration details (`gst_in`, `company_name`, `trade_name`, `registration_date`, `status`) and a full list of filing records (`GSTR-1`, `GSTR-3B`) with due dates, filing dates, and delay indicators.
+</Accordion>
+
+<Accordion title="GST Verification via GSTIN">
+  If you already have the GSTIN, verify it directly:
+
+  ```bash
+  curl -X POST "https://your-domain.com/api/get-gst-details-by-gstin" \
+    -H "Authorization: Bearer {your_token}" \
+    -H "Content-Type: application/json" \
+    -d '{
+      "gst_no": "27AABCU9603R1ZX",
+      "customer_id": 42
+    }'
+  ```
+</Accordion>
+
+## Background Verification
+
+Run a court record and background verification check on any applicant using their name and date of birth:
+
+```bash
+curl -X POST "https://your-domain.com/api/check-background-verification" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Rahul Sharma",
+    "dob": "1990-05-15",
+    "customer_id": 42
+  }'
+```
+
+The platform queries court databases and stores a background verification record with:
+
+| Field | Description |
+|---|---|
+| `total_cases` | Total number of court cases found |
+| `civil_cases` | Count of civil cases |
+| `criminal_cases` | Count of criminal cases |
+| `pending_cases` | Cases currently pending |
+| `disposed_cases` | Cases already disposed |
+| `not_available_cases` | Cases whose status could not be determined |
+| `severity_high` | High-severity case count |
+| `severity_medium` | Medium-severity case count |
+| `severity_low` | Low-severity case count |
+| `confidence_level` | Confidence score of the match |
+| `district_courts` | Cases in district courts |
+| `high_courts` | Cases in high courts |
+| `consumer_courts` | Cases in consumer courts |
+| `supreme_courts` | Cases in the Supreme Court |
+| `tribunal_courts` | Cases in tribunal courts |
+
+After reviewing the report, update the verification decision using the record ID:
+
+```bash
+curl -X POST "https://your-domain.com/api/update-background-verification" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "id": 15,
+    "is_verified": 1
+  }'
+```
+
+<Tip>
+  Run background verification early in the process — ideally right after customer onboarding — so any adverse findings can be flagged before the full credit assessment begins.
+</Tip>

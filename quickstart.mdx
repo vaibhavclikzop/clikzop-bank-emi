@@ -1,0 +1,214 @@
+---
+title: "Quickstart Guide — Clikzop Bank EMI Loan Origination API"
+sidebarTitle: "Quickstart"
+description: "Follow these steps to obtain a Bearer token, onboard your first customer, verify their PAN, submit a loan application, and fetch a CIBIL score."
+---
+
+This guide walks you through the core loan origination flow end to end. In under ten minutes you will have a working access token, a verified customer record, and an active loan application with a CIBIL score attached — using only `curl` calls against the live API. Make sure you have your credentials from your account manager before you begin.
+
+<Tip>
+  All API responses follow the same envelope format: `{"status": true/false, "message": "...", "data": {...}}`. Check `status` first before reading `data`.
+</Tip>
+
+<Steps>
+  <Step title="Get Your Access Token">
+    Authenticate with your email and password to receive a Bearer token. Super-admin users call `POST /api/login`; DSA / tenant users call `POST /api/tenant-login` (see [Authentication](/authentication) for the difference).
+
+    The login endpoint also requires your device's `latitude` and `longitude` for audit-log purposes. You can pass any valid coordinate during testing.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/login" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "email": "you@example.com",
+        "password": "yourpassword",
+        "latitude": "19.0760",
+        "longitude": "72.8777"
+      }'
+    ```
+
+    A successful response returns a `token` you will use on every subsequent request:
+
+    ```json
+    {
+      "status": true,
+      "message": "Super Admin Login",
+      "token": "2|aBcDeFgHiJkLmNoPqRsTuVwXyZ123456",
+      "data": {
+        "id": 1,
+        "name": "Amit Verma",
+        "email": "you@example.com",
+        "role": "super_admin",
+        "tenant_id": null
+      }
+    }
+    ```
+
+    Store the `token` value. You will pass it as `Authorization: Bearer {token}` in every request below.
+  </Step>
+
+  <Step title="Create a Customer">
+    Register a new loan applicant with `POST /api/save-customer`. This endpoint creates the customer record, auto-assigns a document checklist, and requires core identity fields including a PAN number and a signup document.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-customer" \
+      -H "Authorization: Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ123456" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "name": "Rahul Sharma",
+        "number": "9876543210",
+        "email": "rahul@example.com",
+        "dob": "1990-05-15",
+        "pan_no": "ABCDE1234F",
+        "signup_document_type": "pan",
+        "signup_document": "ABCDE1234F",
+        "loan_type_id": 1,
+        "loan_amount": 500000,
+        "tenure": 36
+      }'
+    ```
+
+    The response includes the newly created customer record with its `id`. Save the `id` — you need it in subsequent steps.
+
+    ```json
+    {
+      "status": true,
+      "message": "Customer created successfully",
+      "data": {
+        "id": 42,
+        "name": "Rahul Sharma",
+        "email": "rahul@example.com",
+        "pan_masked": "XXXXXX234F",
+        "masked_number": "98765*****",
+        "tenant_id": 3,
+        "created_at": "2024-08-01T10:23:00.000000Z"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Verify Customer Identity">
+    Confirm the customer's PAN card using `POST /api/check-pan-card`. This call hits a live verification service and marks the corresponding document record as verified in the customer's checklist.
+
+    You need the `customer_id` from Step 2, the `id` of the PAN document entry in the customer's document list (retrieve it via `GET /api/get-customer-details/{id}`), and the `document_id` for the PAN document type.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/check-pan-card" \
+      -H "Authorization: Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ123456" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "pan_card_no": "ABCDE1234F",
+        "customer_id": 42,
+        "id": 15,
+        "document_id": 2
+      }'
+    ```
+
+    On success, the document record is updated with verified address fields from the registry:
+
+    ```json
+    {
+      "status": true,
+      "message": "Save Successfully",
+      "data": {
+        "id": 15,
+        "document_no_last4": "234F",
+        "is_verified": 1,
+        "verified_at": "2024-08-01T10:25:00.000000Z",
+        "state": "Maharashtra",
+        "city": "Mumbai"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Create a Loan Application">
+    Submit the loan application with `POST /api/save-loan`. This endpoint requires the `create_loan` permission, creates the `Loan` record, and auto-generates a unique loan number.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-loan" \
+      -H "Authorization: Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ123456" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_type_id": 1,
+        "loan_amount": 500000,
+        "tenure": 36,
+        "income_type_id": 1
+      }'
+    ```
+
+    The response includes the new loan record with its system-generated `loan_number` and `id`. Save the `id` — you need it in Step 5.
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {
+        "id": 7,
+        "loan_number": "LN-63E2A5F1B4C8D",
+        "customer_id": 42,
+        "loan_type_id": 1,
+        "loan_amount": "500000.00",
+        "tenure_months": 36,
+        "status_id": 1,
+        "created_at": "2024-08-01T10:28:00.000000Z"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Fetch CIBIL Score">
+    Retrieve the customer's live CIBIL score with `POST /api/get-cibil-data`. The platform looks up the customer's PAN and mobile number automatically from the loan record — you only need to pass the `loan_id`.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/get-cibil-data" \
+      -H "Authorization: Bearer 2|aBcDeFgHiJkLmNoPqRsTuVwXyZ123456" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "loan_id": 7
+      }'
+    ```
+
+    On success, the CIBIL score and full trade-line account details are stored against the loan. The response wraps the raw bureau data returned by our CIBIL data provider — key summary fields include `cibil_score`, `currentCredit`, `creditUsed`, `OnTimePaymentHistory`, and `reportUrl`, nested under `data.data`:
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {
+        "status": true,
+        "data": {
+          "data": {
+            "cibil_score": 752,
+            "currentCredit": 850000,
+            "creditUsed": 312000,
+            "OnTimePaymentHistory": "94%",
+            "Inquires": 3,
+            "reportUrl": "https://bureau.example.com/reports/abc123"
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Next Steps
+
+<CardGroup cols={3}>
+  <Card title="Onboard a Customer" icon="user-plus" href="/guides/onboard-customer">
+    Learn the full customer onboarding flow including Aadhaar, driving licence, and background verification.
+  </Card>
+  <Card title="Submit a Loan Application" icon="file-signature" href="/guides/submit-loan-application">
+    Explore advanced loan creation options: co-applicants, document uploads, GST data, and bank statement linking.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Browse the complete endpoint reference with request schemas, response shapes, and error codes for every route.
+  </Card>
+</CardGroup>

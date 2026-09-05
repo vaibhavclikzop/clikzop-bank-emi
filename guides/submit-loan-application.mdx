@@ -1,0 +1,309 @@
+---
+title: "How to Create and Submit a Loan Application — Clikzop"
+sidebarTitle: "Submit Loan"
+description: "Learn how to create a loan application, add co-applicants, upload required checklist documents, and track loan status transitions in Clikzop Bank EMI."
+---
+
+A loan application in Clikzop Bank EMI ties together a customer, a loan type, required documents, and one or more applicants into a single tracked workflow. This guide covers every step from picking a loan type to uploading your checklist documents and monitoring status transitions.
+
+<Note>
+  The customer must be fully onboarded before you create a loan application. Follow the [Onboard a Customer](/guides/onboard-customer) guide first.
+</Note>
+
+<Steps>
+
+  <Step title="Get Available Loan Types">
+    Retrieve the list of loan types configured by your super admin. This endpoint is restricted to super-admin users.
+
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-loan-type" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        { "id": 1, "name": "Home Loan" },
+        { "id": 2, "name": "Business Loan" },
+        { "id": 3, "name": "Personal Loan" }
+      ]
+    }
+    ```
+
+    Note the `id` for the loan type you want to use in the next step.
+  </Step>
+
+  <Step title="Create the Loan Application">
+    Create the loan application for an onboarded customer. The platform automatically assigns common documents and income-type-specific documents to the loan checklist.
+
+    <ParamField body="customer_id" type="integer" required>
+      ID of the onboarded customer.
+    </ParamField>
+
+    <ParamField body="loan_type_id" type="integer" required>
+      ID of the loan type from `GET /api/get-loan-type`.
+    </ParamField>
+
+    <ParamField body="income_type_id" type="integer" required>
+      ID of the income type (salaried, self-employed, etc.). Determines the income-specific document checklist.
+    </ParamField>
+
+    <ParamField body="loan_amount" type="number" required>
+      Requested loan amount in INR.
+    </ParamField>
+
+    <ParamField body="tenure" type="integer" required>
+      Repayment tenure in months.
+    </ParamField>
+
+    <ParamField body="loan_purpose" type="string">
+      Free-text description of the loan purpose.
+    </ParamField>
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-loan" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "customer_id": 42,
+        "loan_type_id": 2,
+        "income_type_id": 1,
+        "loan_amount": 1000000,
+        "tenure": 36,
+        "loan_purpose": "Business expansion"
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": {
+        "id": 7,
+        "loan_number": "LN-0007",
+        "customer_id": 42,
+        "loan_type_id": 2,
+        "loan_amount": 1000000,
+        "tenure_months": 36,
+        "status_id": 1,
+        "created_at": "2024-06-01T10:45:00.000000Z"
+      }
+    }
+    ```
+
+    Record the loan `id` — you will use it in all subsequent calls. This endpoint requires the loan creation permission.
+  </Step>
+
+  <Step title="Add a Co-Applicant (Optional)">
+    Link an additional verified customer to the loan as a co-applicant. The primary applicant is created automatically when you call `save-loan`; use this endpoint for any additional applicants.
+
+    <ParamField body="loan_id" type="integer" required>
+      ID of the loan.
+    </ParamField>
+
+    <ParamField body="customer_id" type="integer" required>
+      ID of the customer to add as co-applicant. This customer must already be onboarded.
+    </ParamField>
+
+    <ParamField body="financial_status" type="string" required>
+      Financial relationship to the loan. Use `"financial"` for a financially liable co-applicant or `"non_financial"` for a non-financial co-applicant.
+    </ParamField>
+
+    <ParamField body="relationship_id" type="integer" required>
+      ID of the relationship type from `GET /api/get-relationship`.
+    </ParamField>
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/save-co-applicant" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "loan_id": 7,
+        "customer_id": 55,
+        "financial_status": "financial",
+        "relationship_id": 2
+      }'
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Save successfully",
+      "data": []
+    }
+    ```
+  </Step>
+
+  <Step title="Get the Document Checklist">
+    Retrieve the full list of documents required for the loan. The checklist is pre-populated when the loan is created based on the income type.
+
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-loan-check-list/7" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 101,
+          "name": "Bank Statement",
+          "mime_type": null,
+          "file_size": null,
+          "uploaded_by": null,
+          "is_uploaded": false
+        },
+        {
+          "id": 102,
+          "name": "ITR - Last 2 Years",
+          "mime_type": null,
+          "file_size": null,
+          "uploaded_by": null,
+          "is_uploaded": false
+        },
+        {
+          "id": 103,
+          "name": "PAN Card",
+          "mime_type": "application/pdf",
+          "file_size": 204800,
+          "uploaded_by": 3,
+          "is_uploaded": true
+        }
+      ]
+    }
+    ```
+
+    Use the `id` of each checklist item as `loan_document_id` when uploading files.
+  </Step>
+
+  <Step title="Upload Checklist Documents">
+    Upload files against individual checklist items. The endpoint accepts `pdf`, `jpg`, `jpeg`, and `png` files up to 5 MB each.
+
+    ```bash
+    curl -X POST "https://your-domain.com/api/upload-check-list-document" \
+      -H "Authorization: Bearer {your_token}" \
+      -F "loan_id=7" \
+      -F "loan_document_id=101" \
+      -F "file=@/path/to/bank_statement.pdf"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Document uploaded successfully",
+      "data": {
+        "id": 101,
+        "user_details": {
+          "id": 3,
+          "name": "Anil Mehta"
+        }
+      }
+    }
+    ```
+
+    <Warning>
+      Upload only digitally generated PDFs for bank statements — scanned PDFs will be rejected with a `422` error because the text extraction layer cannot parse image-only files.
+    </Warning>
+  </Step>
+
+  <Step title="Verify Uploaded Documents">
+    Download or verify a specific uploaded document by its checklist item ID.
+
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-uploaded-document/101" \
+      -H "Authorization: Bearer {your_token}"
+    ```
+
+    The response streams the file as a download attachment using the original file name.
+  </Step>
+
+  <Step title="Track Loan Status">
+    List all loans with pagination and optional status filtering.
+
+    ```bash
+    curl -X GET "https://your-domain.com/api/get-loan/0/10" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+
+    **Response:**
+
+    ```json
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 7,
+          "loan_number": "LN-0007",
+          "customer": { "id": 42, "name": "Rahul Sharma" },
+          "status": { "id": 1, "name": "Pending" },
+          "loan_type": { "id": 2, "name": "Business Loan" },
+          "loan_amount": 1000000
+        }
+      ],
+      "pagination": {
+        "total_records": 1,
+        "offset": 0,
+        "limit": 10,
+        "current_page": 1,
+        "total_pages": 1,
+        "has_more": false
+      }
+    }
+    ```
+
+    For full loan details including applicants, ITR data, and CIBIL snapshot, call `GET /api/get-loan-details/{id}`.
+
+    This endpoint requires the loan viewing permission.
+  </Step>
+
+</Steps>
+
+## Loan Status Flow
+
+Every loan has a `status_id` that advances through a defined sequence. Call `GET /api/get-status` to retrieve all available statuses in order:
+
+```bash
+curl -X GET "https://your-domain.com/api/get-status" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Accept: application/json"
+```
+
+**Response:**
+
+```json
+{
+  "status": true,
+  "message": "Load Successfully",
+  "data": [
+    { "id": 1, "name": "Pending" },
+    { "id": 2, "name": "Under Review" },
+    { "id": 3, "name": "Approved" },
+    { "id": 4, "name": "Disbursed" },
+    { "id": 5, "name": "Rejected" }
+  ]
+}
+```
+
+Use these `id` values when filtering the loan list by status.
+
+<Tip>
+  Filter loans by status by passing the `statusID` as a third path parameter: `GET /api/get-loan/0/10/2` returns only loans with `status_id = 2`.
+</Tip>

@@ -1,0 +1,178 @@
+---
+title: "Manage Customer Bank Accounts via the Clikzop APIs"
+sidebarTitle: "Bank Accounts"
+description: "POST /api/save-customer-bank and GET /api/get-customer-bank — add a verified bank account to a customer profile and retrieve accounts on file."
+---
+
+Bank accounts are linked to customers for use in loan assessment and disbursement. The platform performs a live penny-drop verification against the IFSC and account number before saving — invalid combinations are rejected. Account numbers are stored encrypted; only the last 4 digits appear in any API response. Always validate the IFSC code first using `/api/check-ifsc-code` to confirm the branch details before saving an account.
+
+---
+
+## Validate an IFSC code
+
+Look up branch and bank details for any IFSC code before attaching a bank account to a customer. The platform caches known codes for fast lookup.
+
+**POST** `/api/check-ifsc-code`
+
+<Note>
+  Always validate the IFSC code before saving a bank account to ensure accuracy and avoid failed penny-drop verification.
+</Note>
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="ifsc_code" type="string" required>
+      11-character IFSC code (e.g., `HDFC0001234`). The code is looked up in our IFSC directory and, if not found, verified live.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/check-ifsc-code" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{"ifsc_code": "HDFC0001234"}'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": {
+        "id": 88,
+        "ifsc": "HDFC0001234",
+        "bank_name": "HDFC Bank",
+        "branch": "Andheri West",
+        "city": "Mumbai",
+        "district": "Mumbai Suburban",
+        "state": "Maharashtra",
+        "micr": "400240013",
+        "address": "Plot 12, SV Road, Andheri West, Mumbai – 400058"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Add a bank account
+
+Add a verified bank account to a customer profile. The platform performs a live penny-drop check — the account name returned by the bank is stored alongside the masked account number.
+
+**POST** `/api/save-customer-bank`
+
+<Tabs>
+  <Tab title="Parameters">
+    <ParamField body="customer_id" type="integer" required>
+      The internal ID of the customer to attach this account to.
+    </ParamField>
+
+    <ParamField body="account_number" type="string" required>
+      Full bank account number. Stored encrypted; only the last 4 digits are retained in plaintext.
+    </ParamField>
+
+    <ParamField body="ifsc_code" type="string" required>
+      Valid 11-character IFSC code. Must exist in the IFSC master table — validate with `/api/check-ifsc-code` first.
+    </ParamField>
+
+    <ParamField body="bank_id" type="integer" required>
+      Internal bank reference ID. Retrieve valid IDs from `GET /api/get-banks`.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X POST "https://your-domain.com/api/save-customer-bank" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Content-Type: application/json" \
+      -H "Accept: application/json" \
+      -d '{
+        "customer_id": 42,
+        "account_number": "50100123457890",
+        "ifsc_code": "HDFC0001234",
+        "bank_id": 5
+      }'
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Bank account saved successfully",
+      "data": {
+        "accountName": "PRIYA SHARMA",
+        "accountNumber": "50100123457890",
+        "ifsc": "HDFC0001234",
+        "isValid": true,
+        "statusAsPerSource": "VALID",
+        "bankResponse": "Account is active",
+        "bankRRN": "RRN20240501001",
+        "statusCode": "101"
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Account numbers are stored encrypted. The API returns the account name as confirmed by the bank during penny-drop verification. Only the last 4 digits of the account number are stored in plaintext for display purposes.
+</Note>
+
+<Warning>
+  If the IFSC code is not found in the master table, the API returns a `404` error. Always call `/api/check-ifsc-code` first to confirm the branch exists.
+</Warning>
+
+---
+
+## Retrieve bank accounts for a customer
+
+Fetch all bank accounts on file for a specific customer. Returned account numbers show only the last 4 digits.
+
+**GET** `/api/get-customer-bank/{id}`
+
+<Tabs>
+  <Tab title="Path parameters">
+    <ParamField path="id" type="integer" required>
+      The internal customer ID whose bank accounts you want to retrieve.
+    </ParamField>
+  </Tab>
+  <Tab title="Request example">
+    ```bash title="cURL"
+    curl -X GET "https://your-domain.com/api/get-customer-bank/42" \
+      -H "Authorization: Bearer {your_token}" \
+      -H "Accept: application/json"
+    ```
+  </Tab>
+  <Tab title="Response">
+    ```json title="200 OK"
+    {
+      "status": true,
+      "message": "Load Successfully",
+      "data": [
+        {
+          "id": 3,
+          "account_holder_name": "PRIYA SHARMA",
+          "account_no_last4": "7890",
+          "ifsc": "HDFC0001234",
+          "status_code": "101",
+          "bank_id": 5,
+          "ifsc_master_id": 88
+        },
+        {
+          "id": 7,
+          "account_holder_name": "PRIYA SHARMA",
+          "account_no_last4": "4411",
+          "ifsc": "SBIN0001234",
+          "status_code": "101",
+          "bank_id": 1,
+          "ifsc_master_id": 204
+        }
+      ]
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Retrieve the list of supported banks and their internal IDs by calling `GET /api/get-banks` before saving a new account.
+</Tip>

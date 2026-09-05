@@ -1,0 +1,129 @@
+---
+title: "Karza GST Verification and KYC Document Integration"
+sidebarTitle: "Karza"
+description: "Clikzop Bank EMI uses Karza to verify GST filings and KYC documents. Learn how this integration works and what structured data it returns."
+---
+
+Karza is a data verification provider integrated into Clikzop Bank EMI for GST return data retrieval and document verification. The platform abstracts the Karza API entirely — you interact with Clikzop endpoints using your existing `Bearer` token, and the platform handles all Karza authentication, request signing, and response normalization behind the scenes. You never need to manage a Karza API key directly.
+
+## What Karza Powers
+
+Karza drives two primary verification workflows inside Clikzop Bank EMI:
+
+| Capability | Details |
+|---|---|
+| GST profile and filing data | Retrieves company registration details, GSTR-1 and GSTR-3B return summaries by GSTIN |
+| GST return authentication via OTP | Initiates a TRN-based OTP flow so customers can authorize access to their GST filing history |
+| Real-time webhook events | Delivers asynchronous verification results to the platform's webhook receiver when processing completes |
+
+## Karza-Powered Endpoints
+
+All Karza-backed endpoints require a valid `Authorization: Bearer {token}` header. Include it on every request.
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /api/get-gst-details-by-gstin` | Retrieve GST profile and filings for a given GSTIN |
+| `POST /api/send-otp-for-gst-filling` | Send OTP to the customer's registered mobile to initiate GST return access |
+| `POST /api/verify-otp-for-gst-filling` | Verify the OTP and authenticate the GST filing session |
+| `POST /api/webhook/karza-webhook` | Receive Karza event callbacks (validated by webhook secret, no Bearer token required) |
+
+### Retrieve GST Details by GSTIN
+
+```bash
+curl -X POST "https://your-domain.com/api/get-gst-details-by-gstin" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{"gst_no": "27AAPFU0939F1ZV"}'
+```
+
+### Send OTP for GST Filing Access
+
+```bash
+curl -X POST "https://your-domain.com/api/send-otp-for-gst-filling" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "customer_gstin_username",
+    "gst": "27AAPFU0939F1ZV",
+    "customer_id": 12,
+    "loan_id": 5
+  }'
+```
+
+A successful response returns a `request_id` that you pass into the OTP verification step:
+
+```json
+{
+  "status": true,
+  "message": "OTP sent successfully",
+  "request_id": "karza-req-abc123",
+  "data": {}
+}
+```
+
+### Verify OTP for GST Filing Access
+
+```bash
+curl -X POST "https://your-domain.com/api/verify-otp-for-gst-filling" \
+  -H "Authorization: Bearer {your_token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "otp": "548291",
+    "gst": "27AAPFU0939F1ZV",
+    "customer_id": 12,
+    "request_id": "karza-req-abc123",
+    "loan_id": 5
+  }'
+```
+
+## Karza Webhook Events
+
+GST return retrieval is an asynchronous process. After the OTP is verified and the session is authenticated, Karza processes the return data in the background. When the verification completes, Karza POSTs an event to the platform's webhook receiver:
+
+```http
+POST /api/webhook/karza-webhook?token={webhook_secret}
+```
+
+The platform validates the token and records the event linked to the relevant loan GST record. A typical Karza webhook payload follows this shape:
+
+```json
+{
+  "requestId": "karza-req-abc123",
+  "event": "gst_return_complete",
+  "statusCode": 101,
+  "statusMessage": "Success",
+  "result": {}
+}
+```
+
+<Note>
+  Karza credentials are configured by the platform administrator. No additional setup is required on your end. For details on webhook secret configuration, see the [Webhooks guide](/integrations/webhooks).
+</Note>
+
+## Data Returned
+
+Once the GST verification and return retrieval complete, the following structured data is available on the loan record:
+
+<Accordion title="GSTR-3B Summary Fields">
+  GSTR-3B (monthly self-assessed summary return) provides these key fields:
+
+  | Field | Description |
+  |---|---|
+  | Total tax payable | Aggregate IGST, CGST, and SGST/UTGST liability for the period |
+  | ITC details | Input tax credit available, applied, and net balance |
+  | Supply details — inter-state | Taxable value and IGST for supplies to registered and unregistered buyers outside the state |
+  | Supply details — intra-state | Taxable value, CGST, and SGST for supplies within the state |
+  | Exempt/nil/non-GST supply | Turnover not attracting GST |
+</Accordion>
+
+<Accordion title="GSTR-1 Summary Fields">
+  GSTR-1 (outward supplies return) provides aggregate breakdowns by filing period:
+
+  | Field | Description |
+  |---|---|
+  | Taxable value | Total value of outward taxable supplies |
+  | IGST | Integrated GST on inter-state supplies |
+  | CGST | Central GST on intra-state supplies |
+  | SGST | State GST on intra-state supplies |
+  | Invoice count | Number of B2B and B2C invoices reported |
+</Accordion>
